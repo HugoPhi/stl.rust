@@ -53,7 +53,8 @@ fn bench_pop_head(c: &mut Criterion) {
 }
 
 fn bench_pop_back(c: &mut Criterion) {
-    let mut group = c.benchmark_group("LinkedList Operations");
+    let mut group = c.benchmark_group("LinkedList Operations - Pop Back");
+    group.sample_size(10);  // set to 10 to avoid time out
     for size in [1000, 10_000, 100_000].iter() {
         group.throughput(Throughput::Elements(*size));
         group.bench_with_input(BenchmarkId::new("pop_back", size), size, |b, &size| {
@@ -106,13 +107,15 @@ fn bench_remove(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(
-    benches,
-    bench_push_head,
-    bench_push_back,
-    bench_pop_head,
-    bench_pop_back,
-    bench_insert,
-    bench_remove
-);
+fn custom_criterion() -> Criterion {
+    Criterion::default()
+        // .output_directory(std::path::Path::new("public/reports"))
+        .configure_from_args()
+}
+
+criterion_group! {
+    name = benches;
+    config = custom_criterion();
+    targets = bench_push_head, bench_push_back, bench_pop_head, bench_pop_back, bench_insert, bench_remove
+}
 criterion_main!(benches);

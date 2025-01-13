@@ -58,9 +58,17 @@ where
     /// # Examples
     ///
     /// ```text
-    /// node1(1) -> node2(2) -> node3(3)  ======> node1(2) -> node4(4) -> node2(2) -> node3(3)
-    /// ^
-    /// node1.insert(&4);
+    /// call node1.insert(&4) >> node1(1)         node1(1)
+    ///                            ^                ^
+    ///                            |                |
+    ///                          node2(2)   ==>   node4(4)
+    ///                            ^                ^
+    ///                            |                |
+    ///                          node3(3)         node2(2)
+    ///                                             ^
+    ///                                             |
+    ///                                           node3(3)
+    ///
     /// ```
     pub fn insert(&mut self, val: &T) {
         let node = LinkedListNode::new(val.clone(), self.next());
@@ -81,9 +89,25 @@ where
     /// # Examples
     ///
     /// ```text
-    /// node1(1) -> node2(2) -> node3(3)  ======> node1(1) -> node3(3), return Ok(2)
-    /// ^
-    /// node1.remove()
+    /// call node1.remove() >> node1(1)         node1(1): [✓] return Ok(2)
+    ///                          ^                ^     
+    ///                          |                |     
+    ///                        node2(2)   ==>   node3(3)
+    ///                          ^
+    ///                          |
+    ///                        node3(3)
+    ///
+    /// ```
+    ///
+    /// ```text
+    ///                        node1(1)         node1(1)
+    ///                          ^                ^
+    ///                          |                |
+    ///                        node2(2)   ==>   node2(2)
+    ///                          ^                ^
+    ///                          |                |
+    /// call node1.remove() >> node3(3)         node3(3): [x] nothing behind, return Err(LinkedListError::NextIsNone)
+    ///
     /// ```
     pub fn remove(&mut self) -> Result<T, LinkedListError> {
         if let Some(node) = self.next.as_ref() {
@@ -131,14 +155,14 @@ where
 /// 
 /// ```text
 /// head -> node1
-///          ^
-///          |
+///           ^
+///           |
 ///         node2
-///          ^
-///          |
+///           ^
+///           |
 ///         node3 
-///          ^
-///          |
+///           ^
+///           |
 /// tail -> node4
 #[derive(Debug, Clone)]
 pub struct LinkedList<T> {
@@ -206,7 +230,6 @@ where
     /// | Time | Space |
     /// | ---- | ----- |
     /// | O(1) | O(1) |
-    /// ---------------
     pub fn push_head(&mut self, val: &T) {
         match self.len {
             0 => {

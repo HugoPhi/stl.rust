@@ -143,16 +143,16 @@ where
 /// ```
 ///
 /// ## Case2 `self.len == 1`
-/// 
+///
 /// ```text
 /// head -> node
 ///          ^
-/// tail ____| 
+/// tail ____|
 ///
 /// ```
 ///
 /// ## Case3 `self.len > 1`
-/// 
+///
 /// ```text
 /// head -> node1
 ///           ^
@@ -160,10 +160,12 @@ where
 ///         node2
 ///           ^
 ///           |
-///         node3 
+///         node3
 ///           ^
 ///           |
 /// tail -> node4
+///
+/// ```
 #[derive(Debug, Clone)]
 pub struct LinkedList<T> {
     len: usize,                                   // The length of the list.

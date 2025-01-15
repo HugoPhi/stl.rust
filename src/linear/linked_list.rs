@@ -1,8 +1,4 @@
-use std::{
-    cell::RefCell,
-    fmt::{self},
-    rc::Rc,
-};
+use std::{cell::RefCell, fmt, rc::Rc};
 
 /// `LinkedListNode` represents a single node in a linked list containing a value and a reference to the next node.
 #[derive(Debug, Clone)]
@@ -58,9 +54,17 @@ where
     /// # Examples
     ///
     /// ```text
-    /// node1(1) -> node2(2) -> node3(3)  ======> node1(2) -> node4(4) -> node2(2) -> node3(3)
-    /// ^
-    /// node1.insert(&4);
+    /// call node1.insert(&4) >> node1(1)         node1(1)
+    ///                            ^                ^
+    ///                            |                |
+    ///                          node2(2)   ==>   node4(4)
+    ///                            ^                ^
+    ///                            |                |
+    ///                          node3(3)         node2(2)
+    ///                                             ^
+    ///                                             |
+    ///                                           node3(3)
+    ///
     /// ```
     pub fn insert(&mut self, val: &T) {
         let node = LinkedListNode::new(val.clone(), self.next());
@@ -81,9 +85,25 @@ where
     /// # Examples
     ///
     /// ```text
-    /// node1(1) -> node2(2) -> node3(3)  ======> node1(1) -> node3(3), return Ok(2)
-    /// ^
-    /// node1.remove()
+    /// call node1.remove() >> node1(1)         node1(1): [✓] return Ok(2)
+    ///                          ^                ^     
+    ///                          |                |     
+    ///                        node2(2)   ==>   node3(3)
+    ///                          ^
+    ///                          |
+    ///                        node3(3)
+    ///
+    /// ```
+    ///
+    /// ```text
+    ///                        node1(1)         node1(1)
+    ///                          ^                ^
+    ///                          |                |
+    ///                        node2(2)   ==>   node2(2)
+    ///                          ^                ^
+    ///                          |                |
+    /// call node1.remove() >> node3(3)         node3(3): [x] nothing behind, return Err(LinkedListError::NextIsNone)
+    ///
     /// ```
     pub fn remove(&mut self) -> Result<T, LinkedListError> {
         if let Some(node) = self.next.as_ref() {
@@ -93,6 +113,15 @@ where
             Ok(val)
         } else {
             Err(LinkedListError::NextIsNone)
+        }
+    }
+}
+
+impl<T: Default> Default for LinkedListNode<T> {
+    fn default() -> Self {
+        LinkedListNode {
+            value: T::default(),
+            next: None,
         }
     }
 }
@@ -119,27 +148,29 @@ where
 /// ```
 ///
 /// ## Case2 `self.len == 1`
-/// 
+///
 /// ```text
 /// head -> node
 ///          ^
-/// tail ____| 
+/// tail ____|
 ///
 /// ```
 ///
 /// ## Case3 `self.len > 1`
-/// 
+///
 /// ```text
 /// head -> node1
-///          ^
-///          |
+///           ^
+///           |
 ///         node2
-///          ^
-///          |
-///         node3 
-///          ^
-///          |
+///           ^
+///           |
+///         node3
+///           ^
+///           |
 /// tail -> node4
+///
+/// ```
 #[derive(Debug, Clone)]
 pub struct LinkedList<T> {
     len: usize,                                   // The length of the list.
@@ -206,7 +237,6 @@ where
     /// | Time | Space |
     /// | ---- | ----- |
     /// | O(1) | O(1) |
-    /// ---------------
     pub fn push_head(&mut self, val: &T) {
         match self.len {
             0 => {
@@ -701,14 +731,9 @@ where
         }
         list
     }
-}
 
-impl<T: Default> Default for LinkedListNode<T> {
-    fn default() -> Self {
-        LinkedListNode {
-            value: T::default(),
-            next: None,
-        }
+    pub fn iter(&self) -> LinkedListIterator<T> {
+        LinkedListIterator::new(self.head.clone()) // use clone to avoid move of self.head if you use Box<> impled LinkedList this is not able to complemented
     }
 }
 
@@ -731,6 +756,41 @@ impl<T: fmt::Display> fmt::Display for LinkedList<T> {
 
         write!(f, ")")?;
         Ok(())
+    }
+}
+
+/// Iterator for `LinkedListNode<T>` & `LinkedList<T>`
+pub struct LinkedListIterator<T> {
+    curr: Option<Rc<RefCell<LinkedListNode<T>>>>,
+}
+
+impl<T> LinkedListIterator<T> {
+    fn new(head: Option<Rc<RefCell<LinkedListNode<T>>>>) -> Self {
+        LinkedListIterator { curr: head } // move ownership of head to curr
+    }
+}
+
+impl<T: Clone> Iterator for LinkedListIterator<T> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let curr = self.curr.clone();
+        if let Some(node) = curr {
+            let node_ref = node.borrow();
+            self.curr = node_ref.next.clone();
+            Some(node_ref.value.clone())
+        } else {
+            None
+        }
+    }
+}
+
+impl<T: Clone> IntoIterator for LinkedList<T> {
+    type Item = T;
+    type IntoIter = LinkedListIterator<T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        LinkedListIterator::new(self.head) // do not use self.head.clone here is to avoid rc::ref + 1
     }
 }
 
@@ -1008,5 +1068,28 @@ mod tests {
         let list = LinkedList::from_vec(vec![1, 1, 1, 1]);
         assert_eq!(list.len(), 4); // List should contain 4 elements
         assert_eq!(format!("{}", list), "(1 -> 1 -> 1 -> 1)");
+    }
+
+    #[test]
+    fn test_into_iter() {
+        let list: LinkedList<i32> = LinkedList::from_vec(vec![1, 2, 3, 4, 5, 6]);
+
+        let it = list.into_iter(); // list is moved
+
+        let vec = it.collect::<Vec<i32>>();
+
+        assert_eq!(vec, vec![1, 2, 3, 4, 5, 6]);
+    }
+
+    #[test]
+    fn test_iter() {
+        let list: LinkedList<i32> = LinkedList::from_vec(vec![1, 2, 3, 4, 5, 6]);
+
+        let it = list.iter();
+
+        let vec = it.collect::<Vec<_>>();
+
+        assert_eq!(format!("{}", list), "(1 -> 2 -> 3 -> 4 -> 5 -> 6)");
+        assert_eq!(vec, vec![1, 2, 3, 4, 5, 6]);
     }
 }

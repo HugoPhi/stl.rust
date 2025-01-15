@@ -759,6 +759,7 @@ impl<T: fmt::Display> fmt::Display for LinkedList<T> {
     }
 }
 
+/// Iterator for `LinkedListNode<T>` & `LinkedList<T>`
 pub struct LinkedListIterator<T> {
     curr: Option<Rc<RefCell<LinkedListNode<T>>>>,
 }

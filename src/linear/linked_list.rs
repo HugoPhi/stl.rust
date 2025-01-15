@@ -1,8 +1,4 @@
-use std::{
-    cell::RefCell,
-    fmt::{self},
-    rc::Rc,
-};
+use std::{cell::RefCell, fmt, rc::Rc};
 
 /// `LinkedListNode` represents a single node in a linked list containing a value and a reference to the next node.
 #[derive(Debug, Clone)]
@@ -117,6 +113,15 @@ where
             Ok(val)
         } else {
             Err(LinkedListError::NextIsNone)
+        }
+    }
+}
+
+impl<T: Default> Default for LinkedListNode<T> {
+    fn default() -> Self {
+        LinkedListNode {
+            value: T::default(),
+            next: None,
         }
     }
 }
@@ -726,14 +731,9 @@ where
         }
         list
     }
-}
 
-impl<T: Default> Default for LinkedListNode<T> {
-    fn default() -> Self {
-        LinkedListNode {
-            value: T::default(),
-            next: None,
-        }
+    pub fn iter(&self) -> LinkedListIterator<T> {
+        LinkedListIterator::new(self.head.clone()) // use clone to avoid move of self.head if you use Box<> impled LinkedList this is not able to complemented
     }
 }
 
@@ -756,6 +756,40 @@ impl<T: fmt::Display> fmt::Display for LinkedList<T> {
 
         write!(f, ")")?;
         Ok(())
+    }
+}
+
+pub struct LinkedListIterator<T> {
+    curr: Option<Rc<RefCell<LinkedListNode<T>>>>,
+}
+
+impl<T> LinkedListIterator<T> {
+    fn new(head: Option<Rc<RefCell<LinkedListNode<T>>>>) -> Self {
+        LinkedListIterator { curr: head } // move ownership of head to curr
+    }
+}
+
+impl<T: Clone> Iterator for LinkedListIterator<T> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let curr = self.curr.clone();
+        if let Some(node) = curr {
+            let node_ref = node.borrow();
+            self.curr = node_ref.next.clone();
+            Some(node_ref.value.clone())
+        } else {
+            None
+        }
+    }
+}
+
+impl<T: Clone> IntoIterator for LinkedList<T> {
+    type Item = T;
+    type IntoIter = LinkedListIterator<T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        LinkedListIterator::new(self.head) // do not use self.head.clone here is to avoid rc::ref + 1
     }
 }
 
@@ -1033,5 +1067,28 @@ mod tests {
         let list = LinkedList::from_vec(vec![1, 1, 1, 1]);
         assert_eq!(list.len(), 4); // List should contain 4 elements
         assert_eq!(format!("{}", list), "(1 -> 1 -> 1 -> 1)");
+    }
+
+    #[test]
+    fn test_into_iter() {
+        let list: LinkedList<i32> = LinkedList::from_vec(vec![1, 2, 3, 4, 5, 6]);
+
+        let it = list.into_iter(); // list is moved
+
+        let vec = it.collect::<Vec<i32>>();
+
+        assert_eq!(vec, vec![1, 2, 3, 4, 5, 6]);
+    }
+
+    #[test]
+    fn test_iter() {
+        let list: LinkedList<i32> = LinkedList::from_vec(vec![1, 2, 3, 4, 5, 6]);
+
+        let it = list.iter();
+
+        let vec = it.collect::<Vec<_>>();
+
+        assert_eq!(format!("{}", list), "(1 -> 2 -> 3 -> 4 -> 5 -> 6)");
+        assert_eq!(vec, vec![1, 2, 3, 4, 5, 6]);
     }
 }

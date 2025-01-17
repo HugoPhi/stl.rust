@@ -9,7 +9,7 @@ fn bench_push_head(c: &mut Criterion) {
             b.iter(|| {
                 let mut list = LinkedList::new();
                 for i in 0..size {
-                    list.push_head(&black_box(i));
+                    list.push_head(black_box(i));
                 }
             })
         });
@@ -25,7 +25,7 @@ fn bench_push_back(c: &mut Criterion) {
             b.iter(|| {
                 let mut list = LinkedList::new();
                 for i in 0..size {
-                    list.push_back(&black_box(i));
+                    list.push_back(black_box(i));
                 }
             })
         });
@@ -41,7 +41,7 @@ fn bench_pop_head(c: &mut Criterion) {
             b.iter(|| {
                 let mut list = LinkedList::new();
                 for i in 0..size {
-                    list.push_head(&black_box(i));
+                    list.push_head(black_box(i));
                 }
                 for _ in 0..size {
                     list.pop_head().unwrap();
@@ -65,7 +65,7 @@ fn bench_pop_back(c: &mut Criterion) {
             b.iter(|| {
                 let mut list = LinkedList::new();
                 for i in 0..size {
-                    list.push_back(&black_box(i));
+                    list.push_back(black_box(i));
                 }
                 for _ in 0..size {
                     list.pop_back().unwrap();
@@ -84,9 +84,9 @@ fn bench_insert(c: &mut Criterion) {
             b.iter(|| {
                 let mut list = LinkedList::new();
                 for i in 0..size {
-                    list.push_back(&black_box(i));
+                    list.push_back(black_box(i));
                 }
-                list.insert(&black_box(u64::MAX), size as usize / 2)
+                list.insert(black_box(u64::MAX), size as usize / 2)
                     .unwrap();
             })
         });
@@ -102,7 +102,7 @@ fn bench_remove(c: &mut Criterion) {
             b.iter(|| {
                 let mut list = LinkedList::new();
                 for i in 0..size {
-                    list.push_back(&black_box(i));
+                    list.push_back(black_box(i));
                 }
                 list.remove(size as usize / 2).unwrap();
             })

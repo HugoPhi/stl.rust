@@ -54,20 +54,20 @@ where
     /// # Examples
     ///
     /// ```text
-    /// call node1.insert(&4) >> node1(1)         node1(1)
-    ///                            ^                ^
-    ///                            |                |
-    ///                          node2(2)   ==>   node4(4)
-    ///                            ^                ^
-    ///                            |                |
-    ///                          node3(3)         node2(2)
-    ///                                             ^
-    ///                                             |
-    ///                                           node3(3)
+    /// call node1.insert(4) >> node1(1)         node1(1)
+    ///                           ^                ^
+    ///                           |                |
+    ///                         node2(2)   ==>   node4(4)
+    ///                           ^                ^
+    ///                           |                |
+    ///                         node3(3)         node2(2)
+    ///                                            ^
+    ///                                            |
+    ///                                          node3(3)
     ///
     /// ```
-    pub fn insert(&mut self, val: &T) {
-        let node = LinkedListNode::new(val.clone(), self.next());
+    pub fn insert(&mut self, val: T) {
+        let node = LinkedListNode::new(val, self.next());
         self.next = Some(Rc::new(RefCell::new(node)));
     }
 
@@ -226,9 +226,9 @@ where
     /// use hym::linked_list::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
-    /// list.push_head(&1);
-    /// list.push_head(&2);
-    /// list.push_head(&3);
+    /// list.push_head(1);
+    /// list.push_head(2);
+    /// list.push_head(3);
     /// assert_eq!(format!("{}", list), "(3 -> 2 -> 1)");
     /// ```
     ///
@@ -237,16 +237,16 @@ where
     /// | Time | Space |
     /// | ---- | ----- |
     /// | O(1) | O(1) |
-    pub fn push_head(&mut self, val: &T) {
+    pub fn push_head(&mut self, val: T) {
         match self.len {
             0 => {
-                let node = LinkedListNode::new(val.clone(), None);
+                let node = LinkedListNode::new(val, None);
                 self.head = Some(Rc::new(RefCell::new(node)));
                 self.tail = self.head.clone();
                 self.len += 1;
             }
             _ => {
-                let node = LinkedListNode::new(val.clone(), self.head.clone());
+                let node = LinkedListNode::new(val, self.head.clone());
                 self.head = Some(Rc::new(RefCell::new(node)));
                 self.len += 1;
             }
@@ -265,9 +265,9 @@ where
     /// use hym::linked_list::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
-    /// list.push_back(&1);
-    /// list.push_back(&2);
-    /// list.push_back(&3);
+    /// list.push_back(1);
+    /// list.push_back(2);
+    /// list.push_back(3);
     /// assert_eq!(format!("{}", list), "(1 -> 2 -> 3)");
     /// ```
     ///
@@ -276,7 +276,7 @@ where
     /// | Time | Space |
     /// | ---- | ----- |
     /// | O(1) | O(1) |
-    pub fn push_back(&mut self, val: &T) {
+    pub fn push_back(&mut self, val: T) {
         match self.len {
             0 => {
                 self.push_head(val);
@@ -307,9 +307,9 @@ where
     /// use hym::linked_list::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
-    /// list.push_head(&1);
-    /// list.push_head(&2);
-    /// list.push_head(&3);
+    /// list.push_head(1);
+    /// list.push_head(2);
+    /// list.push_head(3);
     /// assert_eq!(format!("{}", list), "(3 -> 2 -> 1)");
     /// assert_eq!(list.pop_head(), Ok(3));
     /// assert_eq!(format!("{}", list), "(2 -> 1)");
@@ -365,9 +365,9 @@ where
     /// use hym::linked_list::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
-    /// list.push_head(&1);
-    /// list.push_head(&2);
-    /// list.push_head(&3);
+    /// list.push_head(1);
+    /// list.push_head(2);
+    /// list.push_head(3);
     /// assert_eq!(format!("{}", list), "(3 -> 2 -> 1)");
     /// assert_eq!(list.pop_back(), Ok(1));
     /// assert_eq!(format!("{}", list), "(3 -> 2)");
@@ -427,11 +427,11 @@ where
     /// use hym::linked_list::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
-    /// list.push_head(&1);
-    /// list.push_head(&2);
-    /// list.push_head(&3);
+    /// list.push_head(1);
+    /// list.push_head(2);
+    /// list.push_head(3);
     /// assert_eq!(format!("{}", list), "(3 -> 2 -> 1)");
-    /// assert_eq!(list.insert(&4, 2), Ok(()));
+    /// assert_eq!(list.insert(4, 2), Ok(()));
     /// assert_eq!(format!("{}", list), "(3 -> 2 -> 4 -> 1)");
     /// ```
     ///
@@ -440,7 +440,7 @@ where
     /// use hym::linked_list::LinkedListError;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
-    /// assert_eq!(list.insert(&4, 2), Err(hym::linked_list::LinkedListError::InsertOutOfRange));
+    /// assert_eq!(list.insert(4, 2), Err(hym::linked_list::LinkedListError::InsertOutOfRange));
     /// ```
     ///
     /// # Complexity
@@ -448,7 +448,7 @@ where
     /// | Time | Space |
     /// | --- | --- |
     /// | O(n) | O(1) |
-    pub fn insert(&mut self, val: &T, at: usize) -> Result<(), LinkedListError> {
+    pub fn insert(&mut self, val: T, at: usize) -> Result<(), LinkedListError> {
         if at == 0 {
             self.push_head(val);
             Ok(())
@@ -488,9 +488,9 @@ where
     /// use hym::linked_list::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
-    /// list.push_head(&1);
-    /// list.push_head(&2);
-    /// list.push_head(&3);
+    /// list.push_head(1);
+    /// list.push_head(2);
+    /// list.push_head(3);
     /// assert_eq!(format!("{}", list), "(3 -> 2 -> 1)");
     /// assert_eq!(list.remove(1), Ok(2));
     /// assert_eq!(format!("{}", list), "(3 -> 1)");
@@ -553,10 +553,10 @@ where
     /// use hym::linked_list::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
-    /// list.push_head(&1);
-    /// list.push_head(&2);
-    /// list.push_head(&3);
-    /// list.push_head(&2);
+    /// list.push_head(1);
+    /// list.push_head(2);
+    /// list.push_head(3);
+    /// list.push_head(2);
     /// assert_eq!(format!("{}", list), "(2 -> 3 -> 2 -> 1)");
     /// assert_eq!(list.val2ix(&2), vec![0, 2]);
     ///
@@ -610,9 +610,9 @@ where
     /// use hym::linked_list::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
-    /// list.push_head(&1);
-    /// list.push_head(&2);
-    /// list.push_head(&3);
+    /// list.push_head(1);
+    /// list.push_head(2);
+    /// list.push_head(3);
     /// assert_eq!(format!("{}", list), "(3 -> 2 -> 1)");
     /// assert_eq!(list.ix2val(1), Some(2));
     /// ```
@@ -653,9 +653,9 @@ where
     /// use hym::linked_list::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
-    /// list.push_head(&1);
-    /// list.push_head(&2);
-    /// list.push_head(&3);
+    /// list.push_head(1);
+    /// list.push_head(2);
+    /// list.push_head(3);
     /// assert_eq!(format!("{}", list), "(3 -> 2 -> 1)");
     /// assert_eq!(list.get(1), Some(2));
     /// ```
@@ -675,9 +675,9 @@ where
     /// use hym::linked_list::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
-    /// list.push_head(&1);
-    /// list.push_head(&2);
-    /// list.push_head(&3);
+    /// list.push_head(1);
+    /// list.push_head(2);
+    /// list.push_head(3);
     /// assert_eq!(format!("{}", list), "(3 -> 2 -> 1)");
     /// assert_eq!(list.len(), 3);
     /// ```
@@ -693,9 +693,9 @@ where
     /// use hym::linked_list::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
-    /// list.push_head(&1);
-    /// list.push_head(&2);
-    /// list.push_head(&3);
+    /// list.push_head(1);
+    /// list.push_head(2);
+    /// list.push_head(3);
     /// assert_eq!(format!("{}", list), "(3 -> 2 -> 1)");
     /// list.clean();
     /// assert_eq!(format!("{}", list), "()");
@@ -727,12 +727,30 @@ where
     pub fn from_vec(vals: Vec<T>) -> Self {
         let mut list = LinkedList::new();
         for val in vals {
-            list.push_back(&val);
+            list.push_back(val);
         }
         list
     }
 
-    pub fn iter(&self) -> LinkedListIterator<T> {
+    /// Returns an iterator over the values in the linked list without move the ownership of `self`  
+    /// 
+    /// # Returns
+    ///
+    /// A LinkedListIterator<T> which will get the clone value of each node. 
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use hym::linked_list::LinkedList;
+    ///
+    /// let list: LinkedList<i32> = LinkedList::from_vec(vec![1, 2, 3, 4, 5, 6]);
+    /// let it = list.no_move_iter().map(|x| x * x);
+    /// let vec = it.collect::<Vec<_>>();
+    ///
+    /// assert_eq!(format!("{}", list), "(1 -> 2 -> 3 -> 4 -> 5 -> 6)");
+    /// assert_eq!(vec, vec![1, 4, 9, 16, 25, 36]);
+    /// ```
+    pub fn no_move_iter(&self) -> LinkedListIterator<T> {
         LinkedListIterator::new(self.head.clone()) // use clone to avoid move of self.head if you use Box<> impled LinkedList this is not able to complemented
     }
 }
@@ -756,6 +774,15 @@ impl<T: fmt::Display> fmt::Display for LinkedList<T> {
 
         write!(f, ")")?;
         Ok(())
+    }
+}
+
+impl<T: Clone> IntoIterator for LinkedList<T> {
+    type Item = T;
+    type IntoIter = LinkedListIterator<T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        LinkedListIterator::new(self.head) // do not use self.head.clone here is to avoid rc::ref + 1
     }
 }
 
@@ -785,15 +812,6 @@ impl<T: Clone> Iterator for LinkedListIterator<T> {
     }
 }
 
-impl<T: Clone> IntoIterator for LinkedList<T> {
-    type Item = T;
-    type IntoIter = LinkedListIterator<T>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        LinkedListIterator::new(self.head) // do not use self.head.clone here is to avoid rc::ref + 1
-    }
-}
-
 // Unit Test for LinkedList
 #[cfg(test)]
 mod tests {
@@ -805,11 +823,11 @@ mod tests {
     fn test_push_head() {
         // Test adding elements to the head of the list
         let mut list = LinkedList::new();
-        list.push_head(&1); // Add 1 to the head
+        list.push_head(1); // Add 1 to the head
         assert_eq!(list.len(), 1); // List should contain 1 element
         assert_eq!(list.get(0), Some(1)); // First element should be 1
 
-        list.push_head(&2); // Add 2 to the head
+        list.push_head(2); // Add 2 to the head
         assert_eq!(list.len(), 2); // List should now contain 2 elements
         assert_eq!(list.get(0), Some(2)); // First element should be 2
         assert_eq!(list.get(1), Some(1)); // Second element should be 1
@@ -819,11 +837,11 @@ mod tests {
     fn test_push_back() {
         // Test adding elements to the back of the list
         let mut list = LinkedList::new();
-        list.push_back(&1); // Add 1 to the back
+        list.push_back(1); // Add 1 to the back
         assert_eq!(list.len(), 1); // List should contain 1 element
         assert_eq!(list.get(0), Some(1)); // First element should be 1
 
-        list.push_back(&2); // Add 2 to the back
+        list.push_back(2); // Add 2 to the back
         assert_eq!(list.len(), 2); // List should contain 2 elements
         assert_eq!(list.get(1), Some(2)); // Second element should be 2
     }
@@ -834,8 +852,8 @@ mod tests {
         let mut list = LinkedList::new();
         assert_eq!(list.pop_head(), Err(LinkedListError::EmptyList)); // Pop on an empty list should return an error
 
-        list.push_head(&1); // Add 1 to the head
-        list.push_head(&2); // Add 2 to the head
+        list.push_head(1); // Add 1 to the head
+        list.push_head(2); // Add 2 to the head
         assert_eq!(list.pop_head(), Ok(2)); // Pop should return 2 (head element)
         assert_eq!(list.len(), 1); // List should now contain 1 element
         assert_eq!(list.pop_head(), Ok(1)); // Pop should return 1
@@ -849,9 +867,9 @@ mod tests {
         let mut list = LinkedList::new();
         assert_eq!(list.pop_back(), Err(LinkedListError::EmptyList)); // Pop on an empty list should return an error
 
-        list.push_back(&1); // Add 1 to the back
-        list.push_back(&2); // Add 2 to the back
-        list.push_back(&3); // Add 3 to the back
+        list.push_back(1); // Add 1 to the back
+        list.push_back(2); // Add 2 to the back
+        list.push_back(3); // Add 3 to the back
         assert_eq!(list.pop_back(), Ok(3)); // Pop should return 3 (last element)
         assert_eq!(list.len(), 2); // List should now contain 2 elements
         assert_eq!(list.pop_back(), Ok(2)); // Pop should return 2
@@ -865,24 +883,24 @@ mod tests {
     fn test_insert() {
         // Test inserting elements at a specific position
         let mut list = LinkedList::new();
-        assert_eq!(list.insert(&1, 1), Err(LinkedListError::InsertOutOfRange)); // Inserting out of range
+        assert_eq!(list.insert(1, 1), Err(LinkedListError::InsertOutOfRange)); // Inserting out of range
 
-        list.push_back(&1); // Add 1 to the back
-        list.push_back(&3); // Add 3 to the back
-        assert_eq!(list.insert(&2, 1), Ok(())); // Insert 2 at position 1
+        list.push_back(1); // Add 1 to the back
+        list.push_back(3); // Add 3 to the back
+        assert_eq!(list.insert(2, 1), Ok(())); // Insert 2 at position 1
         assert_eq!(list.len(), 3); // List should contain 3 elements
         assert_eq!(list.get(1), Some(2)); // Element at position 1 should be 2
 
-        assert_eq!(list.insert(&4, 3), Ok(())); // Insert 4 at position 3
+        assert_eq!(list.insert(4, 3), Ok(())); // Insert 4 at position 3
         assert_eq!(list.len(), 4); // List should contain 4 elements
         assert_eq!(list.get(3), Some(4)); // Element at position 3 should be 4
 
-        assert_eq!(list.insert(&0, 0), Ok(())); // Insert 0 at position 0
+        assert_eq!(list.insert(0, 0), Ok(())); // Insert 0 at position 0
         assert_eq!(list.len(), 5); // List should contain 5 elements
         assert_eq!(list.get(0), Some(0)); // Element at position 0 should be 0
 
         // Attempt to insert out of range
-        assert_eq!(list.insert(&5, 6), Err(LinkedListError::InsertOutOfRange)); // Inserting out of range should return an error
+        assert_eq!(list.insert(5, 6), Err(LinkedListError::InsertOutOfRange)); // Inserting out of range should return an error
     }
 
     #[test]
@@ -891,9 +909,9 @@ mod tests {
         let mut list = LinkedList::new();
         assert_eq!(list.remove(0), Err(LinkedListError::RemoveFromEmptyList)); // Remove from an empty list should return an error
 
-        list.push_back(&1); // Add 1 to the back
-        list.push_back(&2); // Add 2 to the back
-        list.push_back(&3); // Add 3 to the back
+        list.push_back(1); // Add 1 to the back
+        list.push_back(2); // Add 2 to the back
+        list.push_back(3); // Add 3 to the back
         assert_eq!(list.remove(1), Ok(2)); // Remove element at position 1 (value 2)
         assert_eq!(list.len(), 2); // List should now contain 2 elements
         assert_eq!(list.get(1), Some(3)); // Element at position 1 should be 3
@@ -913,10 +931,10 @@ mod tests {
         let mut list = LinkedList::new();
         assert_eq!(list.val2ix(&1), vec![]); // No elements in the list
 
-        list.push_back(&1); // Add 1 to the back
-        list.push_back(&2); // Add 2 to the back
-        list.push_back(&3); // Add 3 to the back
-        list.push_back(&2); // Add another 2 to the back
+        list.push_back(1); // Add 1 to the back
+        list.push_back(2); // Add 2 to the back
+        list.push_back(3); // Add 3 to the back
+        list.push_back(2); // Add another 2 to the back
 
         assert_eq!(list.val2ix(&1), vec![0]); // 1 is at index 0
         assert_eq!(list.val2ix(&2), vec![1, 3]); // 2 is at indices 1 and 3
@@ -928,9 +946,9 @@ mod tests {
     fn test_ix2val() {
         // Test accessing value by index
         let mut list = LinkedList::new();
-        list.push_back(&10); // Add 10 to the back
-        list.push_back(&20); // Add 20 to the back
-        list.push_back(&30); // Add 30 to the back
+        list.push_back(10); // Add 10 to the back
+        list.push_back(20); // Add 20 to the back
+        list.push_back(30); // Add 30 to the back
 
         assert_eq!(list.ix2val(0), Some(10)); // Element at index 0 should be 10
         assert_eq!(list.ix2val(1), Some(20)); // Element at index 1 should be 20
@@ -942,8 +960,8 @@ mod tests {
     fn test_get() {
         // Test retrieving element at a specific index
         let mut list = LinkedList::new();
-        list.push_back(&100); // Add 100 to the back
-        list.push_back(&200); // Add 200 to the back
+        list.push_back(100); // Add 100 to the back
+        list.push_back(200); // Add 200 to the back
 
         assert_eq!(list.get(0), Some(100)); // Element at index 0 should be 100
         assert_eq!(list.get(1), Some(200)); // Element at index 1 should be 200
@@ -956,10 +974,10 @@ mod tests {
         let mut list: LinkedList<i32> = LinkedList::new();
         assert_eq!(list.len(), 0); // Empty list
 
-        list.push_head(&1); // Add 1 to the head
+        list.push_head(1); // Add 1 to the head
         assert_eq!(list.len(), 1); // List should contain 1 element
 
-        list.push_back(&2); // Add 2 to the back
+        list.push_back(2); // Add 2 to the back
         assert_eq!(list.len(), 2); // List should contain 2 elements
 
         list.pop_head().unwrap(); // Remove from head
@@ -975,11 +993,11 @@ mod tests {
         let mut list = LinkedList::new();
         assert_eq!(format!("{}", list), "()"); // Empty list
 
-        list.push_back(&1); // Add 1 to the back
+        list.push_back(1); // Add 1 to the back
         assert_eq!(format!("{}", list), "(1)");
 
-        list.push_back(&2); // Add 2 to the back
-        list.push_back(&3); // Add 3 to the back
+        list.push_back(2); // Add 2 to the back
+        list.push_back(3); // Add 3 to the back
         assert_eq!(format!("{}", list), "(1 -> 2 -> 3)");
 
         list.pop_head().unwrap(); // Remove from head
@@ -993,9 +1011,9 @@ mod tests {
     fn test_clone() {
         // Test cloning the list
         let mut list = LinkedList::new();
-        list.push_back(&1); // Add 1 to the back
-        list.push_back(&2); // Add 2 to the back
-        list.push_back(&3); // Add 3 to the back
+        list.push_back(1); // Add 1 to the back
+        list.push_back(2); // Add 2 to the back
+        list.push_back(3); // Add 3 to the back
 
         let cloned_list = list.clone(); // Clone the list
         assert_eq!(cloned_list.len(), 3); // Cloned list should contain 3 elements
@@ -1013,11 +1031,11 @@ mod tests {
     fn test_insert_remove_multiple() {
         // Test inserting and removing multiple elements
         let mut list = LinkedList::new();
-        list.push_back(&1); // List: 1
-        list.push_back(&3); // List: 1 -> 3
-        list.insert(&2, 1).unwrap(); // List: 1 -> 2 -> 3
-        list.insert(&4, 3).unwrap(); // List: 1 -> 2 -> 3 -> 4
-        list.insert(&0, 0).unwrap(); // List: 0 -> 1 -> 2 -> 3 -> 4
+        list.push_back(1); // List: 1
+        list.push_back(3); // List: 1 -> 3
+        list.insert(2, 1).unwrap(); // List: 1 -> 2 -> 3
+        list.insert(4, 3).unwrap(); // List: 1 -> 2 -> 3 -> 4
+        list.insert(0, 0).unwrap(); // List: 0 -> 1 -> 2 -> 3 -> 4
 
         assert_eq!(list.len(), 5);
         assert_eq!(format!("{}", list), "(0 -> 1 -> 2 -> 3 -> 4)");
@@ -1042,9 +1060,9 @@ mod tests {
         assert_eq!(format!("{}", list), "()");
 
         // Test clean on a list with elements
-        list.push_back(&1); // Add 1 to the back
-        list.push_back(&2); // Add 2 to the back
-        list.push_back(&3); // Add 3 to the back
+        list.push_back(1); // Add 1 to the back
+        list.push_back(2); // Add 2 to the back
+        list.push_back(3); // Add 3 to the back
         assert_eq!(list.len(), 3);
         assert_eq!(format!("{}", list), "(1 -> 2 -> 3)");
 
@@ -1085,11 +1103,11 @@ mod tests {
     fn test_iter() {
         let list: LinkedList<i32> = LinkedList::from_vec(vec![1, 2, 3, 4, 5, 6]);
 
-        let it = list.iter();
+        let it = list.no_move_iter().map(|x| x * x);
 
         let vec = it.collect::<Vec<_>>();
 
         assert_eq!(format!("{}", list), "(1 -> 2 -> 3 -> 4 -> 5 -> 6)");
-        assert_eq!(vec, vec![1, 2, 3, 4, 5, 6]);
+        assert_eq!(vec, vec![1, 4, 9, 16, 25, 36]);
     }
 }

@@ -293,11 +293,11 @@ pub struct LinkedList<T> {
 | 尾删 | pop_back | O(1) | 1. Ok(T) <br> 2. LinkedListError::EmptyList |
 | 插入 | insert | O(n) | 1. Ok(()) <br> 2. LinkedListError::InsertOutOfRange |
 | 删除 | remove | O(n) | 1. Ok(T) <br> 2. LinkedListError::RemoveOutOfRange <br> 3. LinkedListError::RemoveFromEmptyList |
-| 逆向查找 | val2ix | O(n) | Vec<usize> |
-| 查找 | ix2val & get | O(n) | Option<T> |
+| 逆向查找 | val2ix | O(n) | Vec\<usize> |
+| 查找 | ix2val & get | O(n) | Option\<T> |
 | 获取长度 | len | O(1) | self.len |
 | 清除 | clean | O(n) | () |
-| 获取迭代器 | no_move_iter | O(1) | LinkedListIterator<T> |
+| 获取迭代器 | no_move_iter | O(1) | LinkedListIterator\<T> |
 
 ### 2.2. 各种错误对应的情况
 
@@ -311,19 +311,19 @@ pub struct LinkedList<T> {
 
 ### 2.3. 各种长度对应的链表的数据形态
 
-#### 2.3.1 `len == 0`
+#### `len == 0`
 
 <div style="text-align: center;">
     <img src="./assets/rc_case1.svg" alt="case1" style="width: 35%;" />
 </div>
 
-#### 2.3.2 `len == 1`
+#### `len == 1`
 
 <div style="text-align: center;">
     <img src="./assets/rc_case2.svg" alt="case2" style="width: 50%;" />
 </div>
 
-#### 2.3.3 `len >= 2`
+#### `len >= 2`
 
 <div style="text-align: center;">
     <img src="./assets/rc_case3.svg" alt="case3" style="width: 80%;" />

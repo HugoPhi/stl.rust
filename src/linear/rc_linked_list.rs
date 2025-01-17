@@ -25,7 +25,7 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use hym::linked_list::LinkedListNode;
+    /// use hym::LinkedListNode;
     ///
     /// let node = LinkedListNode::new(1, None);
     /// ```
@@ -201,7 +201,7 @@ where
     /// # Examples  
     ///
     /// ```rust
-    /// use hym::linked_list::LinkedList;
+    /// use hym::LinkedList;
     ///
     /// let list: LinkedList<i32> = LinkedList::new();
     /// assert_eq!(format!("{}", list), "()");
@@ -223,7 +223,7 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use hym::linked_list::LinkedList;
+    /// use hym::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
     /// list.push_head(1);
@@ -262,7 +262,7 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use hym::linked_list::LinkedList;
+    /// use hym::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
     /// list.push_back(1);
@@ -304,7 +304,7 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use hym::linked_list::LinkedList;
+    /// use hym::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
     /// list.push_head(1);
@@ -316,11 +316,11 @@ where
     /// ```
     ///
     /// ```rust
-    /// use hym::linked_list::LinkedList;
-    /// use hym::linked_list::LinkedListError;
+    /// use hym::LinkedList;
+    /// use hym::LinkedListError;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
-    /// assert_eq!(list.pop_head(), Err(hym::linked_list::LinkedListError::EmptyList));
+    /// assert_eq!(list.pop_head(), Err(hym::LinkedListError::EmptyList));
     /// ```
     ///
     /// # Complexity
@@ -362,7 +362,7 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use hym::linked_list::LinkedList;
+    /// use hym::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
     /// list.push_head(1);
@@ -374,11 +374,11 @@ where
     /// ```
     ///
     /// ```rust
-    /// use hym::linked_list::LinkedList;
-    /// use hym::linked_list::LinkedListError;
+    /// use hym::LinkedList;
+    /// use hym::LinkedListError;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
-    /// assert_eq!(list.pop_back(), Err(hym::linked_list::LinkedListError::EmptyList));
+    /// assert_eq!(list.pop_back(), Err(hym::LinkedListError::EmptyList));
     /// ```
     ///
     /// # Complexity
@@ -424,7 +424,7 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use hym::linked_list::LinkedList;
+    /// use hym::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
     /// list.push_head(1);
@@ -436,11 +436,11 @@ where
     /// ```
     ///
     /// ```rust
-    /// use hym::linked_list::LinkedList;
-    /// use hym::linked_list::LinkedListError;
+    /// use hym::LinkedList;
+    /// use hym::LinkedListError;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
-    /// assert_eq!(list.insert(4, 2), Err(hym::linked_list::LinkedListError::InsertOutOfRange));
+    /// assert_eq!(list.insert(4, 2), Err(hym::LinkedListError::InsertOutOfRange));
     /// ```
     ///
     /// # Complexity
@@ -485,7 +485,7 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use hym::linked_list::LinkedList;
+    /// use hym::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
     /// list.push_head(1);
@@ -497,19 +497,19 @@ where
     /// ```
     ///
     /// ```rust
-    /// use hym::linked_list::LinkedList;
-    /// use hym::linked_list::LinkedListError;
+    /// use hym::LinkedList;
+    /// use hym::LinkedListError;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
-    /// assert_eq!(list.remove(0), Err(hym::linked_list::LinkedListError::RemoveFromEmptyList));
+    /// assert_eq!(list.remove(0), Err(hym::LinkedListError::RemoveFromEmptyList));
     /// ```
     ///
     /// ```rust
-    /// use hym::linked_list::LinkedList;
-    /// use hym::linked_list::LinkedListError;
+    /// use hym::LinkedList;
+    /// use hym::LinkedListError;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
-    /// assert_eq!(list.remove(1), Err(hym::linked_list::LinkedListError::RemoveOutOfRange));
+    /// assert_eq!(list.remove(1), Err(hym::LinkedListError::RemoveOutOfRange));
     /// ```
     ///
     /// # Complexity
@@ -550,7 +550,7 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use hym::linked_list::LinkedList;
+    /// use hym::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
     /// list.push_head(1);
@@ -563,7 +563,7 @@ where
     /// ```
     ///
     /// ```rust
-    /// use hym::linked_list::LinkedList;
+    /// use hym::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
     /// assert_eq!(list.val2ix(&2), vec![]);
@@ -607,7 +607,7 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use hym::linked_list::LinkedList;
+    /// use hym::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
     /// list.push_head(1);
@@ -618,7 +618,7 @@ where
     /// ```
     ///
     /// ```rust
-    /// use hym::linked_list::LinkedList;
+    /// use hym::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
     /// assert_eq!(list.ix2val(0), None);
@@ -650,7 +650,7 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use hym::linked_list::LinkedList;
+    /// use hym::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
     /// list.push_head(1);
@@ -672,7 +672,7 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use hym::linked_list::LinkedList;
+    /// use hym::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
     /// list.push_head(1);
@@ -690,7 +690,7 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use hym::linked_list::LinkedList;
+    /// use hym::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
     /// list.push_head(1);
@@ -719,7 +719,7 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use hym::linked_list::LinkedList;
+    /// use hym::LinkedList;
     ///
     /// let list: LinkedList<i32> = LinkedList::from_vec(vec![1, 2, 3]);
     /// assert_eq!(format!("{}", list), "(1 -> 2 -> 3)");
@@ -736,12 +736,12 @@ where
     /// 
     /// # Returns
     ///
-    /// A LinkedListIterator<T> which will get the clone value of each node. 
+    /// A `inkedListIterator<T>` which will get the clone value of each node. 
     ///
     /// # Examples
     ///
     /// ```rust
-    /// use hym::linked_list::LinkedList;
+    /// use hym::LinkedList;
     ///
     /// let list: LinkedList<i32> = LinkedList::from_vec(vec![1, 2, 3, 4, 5, 6]);
     /// let it = list.no_move_iter().map(|x| x * x);

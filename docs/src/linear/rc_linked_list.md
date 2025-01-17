@@ -11,7 +11,7 @@
 
 尽管这在C，C++，python这样的语言里面十分容易实现，但是在Rust中，这似乎不是一件很简单的事情。
 
-## 如何建立节点的数据结构
+## 1. 如何建立节点的数据结构
 
 Rust是编译型语言。Rust在编译时需要知道数据结构的具体大小，因此所有的数据结构都要是固定的。然而对于链表这种递归的数据结构，其理论上的数据大小是无穷大。当然这是编译型语言都会犯难的问题。比如如下C代码：
 
@@ -271,7 +271,7 @@ pub struct Node<T> {
 }
 ```
 
-## 如何建立LinkedList的数据结构
+## 2. 如何建立LinkedList的数据结构
 
 事实上我们希望得到的是一个被封装好的，可以支持我们方便地进行增删改查以及获取各种数据信息比如长度的数据结构。因此我们需要一些额外字段来包装我们的裸链表节点。首先是需要一个头指针，指向真正的数据部分，这部分是必要的。然后为了增加尾部插入的效率，我们加入了`tail`指针，这样会免去查找到最后一个节点的步骤，从而把尾部插入的复杂度降到$O(1)$。以下是我们真正的`LinkedList<T>`的数据结构，以及各种操作的名称和复杂度的概览：
 
@@ -283,7 +283,7 @@ pub struct LinkedList<T> {
 }
 ```
 
-各种操作：
+### 2.1. 各种操作
 
 | 操作 | 函数名 | 时间复杂度 | 返回值 |
 |---|---|:---:|---|
@@ -299,348 +299,42 @@ pub struct LinkedList<T> {
 | 清除 | clean | O(n) | () |
 | 获取迭代器 | no_move_iter | O(1) | LinkedListIterator<T> |
 
-### 各函数的实现方式详解
+### 2.2. 各种错误对应的情况
 
-#### 1. 头插 (`push_head`)
+| 错误类型 | 对应情况 |
+|---|---|
+| `LinkedListError::EmptyList` | 当进行 **pop_head** 或 **pop_back** 操作时，若链表为空，则返回此错误。 |
+| `LinkedListError::InsertOutOfRange` | 当 **insert** 要插入元素的位置没有在$[0, len]$，返回此错误。 |
+| `LinkedListError::RemoveOutOfRange` | 当 **remove** 要删除的位置没在$[0, len)$，返回此错误。 |
+| `LinkedListError::RemoveFromEmptyList` | 当进行 **remove** 操作时，如果链表为空，则返回此错误。 |
+| `LinkedListError::NextIsNone` | 在进行链表遍历时，如果 `next` 指针为 `None`，则返回此错误，表示链表结束或发生其他错误。 |
 
-- **操作**: 在链表的头部插入一个新节点。
-- **时间复杂度**: O(1)
-- **返回值**: `()`
 
-**实现方式**:
+### 2.3. 各种长度对应的链表的数据形态
 
-```rust
-pub fn push_head(&mut self, val: &T) {
-    match self.len {
-        0 => {
-            let node = LinkedListNode::new(val.clone(), None);
-            self.head = Some(Rc::new(RefCell::new(node)));
-            self.tail = self.head.clone();
-            self.len += 1;
-        }
-        _ => {
-            let node = LinkedListNode::new(val.clone(), self.head.clone());
-            self.head = Some(Rc::new(RefCell::new(node)));
-            self.len += 1;
-        }
-    }
-}
-```
+#### 2.3.1 `len == 0`
 
-- **描述**:
-  - 当链表为空（`self.len == 0`）时，创建一个新节点，并将其设置为 `head` 和 `tail`。
-  - 当链表非空时，创建一个新节点，并将其 `next` 指向当前的 `head`，然后更新 `head` 为新节点。
-  - 最后，更新链表长度 `self.len`。
+<div style="text-align: center;">
+    <img src="./assets/rc_case1.svg" alt="case1" style="width: 35%;" />
+</div>
 
-#### 2. 尾插 (`push_back`)
 
-- **操作**: 在链表的尾部插入一个新节点。
-- **时间复杂度**: O(1)
-- **返回值**: `()`
+#### 2.3.2 `len == 1`
 
-**实现方式**:
 
-```rust
-pub fn push_back(&mut self, val: &T) {
-    match self.len {
-        0 => {
-            self.push_head(val);
-        }
-        _ => {
-            self.tail.as_ref().unwrap().borrow_mut().insert(val);
-            let tail_next_ptr = self.tail.as_ref().unwrap().borrow().next();
-            self.tail = tail_next_ptr;
-            self.len += 1;
-        }
-    }
-}
-```
+<div style="text-align: center;">
+    <img src="./assets/rc_case2.svg" alt="case2" style="width: 50%;" />
+</div>
 
-- **描述**:
-  - 当链表为空时，调用 `push_head` 进行插入。
-  - 当链表非空时，通过 `tail` 节点调用 `insert` 方法在尾部插入新节点。
-  - 更新 `tail` 为新插入的节点，并增加链表长度。
 
-#### 3. 头删 (`pop_head`)
+#### 2.3.3 `len >= 2`
 
-- **操作**: 移除并返回链表头部的节点值。
-- **时间复杂度**: O(1)
-- **返回值**:
-  - `Ok(T)`：成功移除并返回值。
-  - `LinkedListError::EmptyList`：链表为空时返回错误。
+<div style="text-align: center;">
+    <img src="./assets/rc_case3.svg" alt="case3" style="width: 80%;" />
+</div>
 
-**实现方式**:
 
-```rust
-pub fn pop_head(&mut self) -> Result<T, LinkedListError> {
-    match self.len {
-        0 => Err(LinkedListError::EmptyList),
-        1 => {
-            let val = self.head.as_ref().unwrap().borrow().value.clone();
-            self.head = None;
-            self.tail = None;
-            self.len = 0;
-            Ok(val)
-        }
-        _ => {
-            let next_node_ptr = self.head.as_ref().unwrap().borrow().next();
-            let val = self.head.as_ref().unwrap().borrow().value.clone();
-            self.head = next_node_ptr;
-            self.len -= 1;
-            Ok(val)
-        }
-    }
-}
-```
-
-- **描述**:
-  - 如果链表为空，返回 `EmptyList` 错误。
-  - 如果链表只有一个节点，移除该节点并将 `head` 和 `tail` 设为 `None`，更新长度为 0。
-  - 如果链表有多个节点，移除 `head`，更新 `head` 为下一个节点，减少长度。
-
-#### 4. 尾删 (`pop_back`)
-
-- **操作**: 移除并返回链表尾部的节点值。
-- **时间复杂度**: O(n)
-- **返回值**:
-  - `Ok(T)`：成功移除并返回值。
-  - `LinkedListError::EmptyList`：链表为空时返回错误。
-
-**实现方式**:
-
-```rust
-pub fn pop_back(&mut self) -> Result<T, LinkedListError> {
-    match self.len {
-        0 => Err(LinkedListError::EmptyList),
-        1 => self.pop_head(),
-        _ => {
-            let mut curr = self.head.as_ref().unwrap().clone();
-            for _ in 0..self.len - 2 {
-                let node = curr.borrow_mut().next.as_ref().unwrap().clone();
-                curr = node;
-            }
-            let val = curr.borrow_mut().remove().unwrap();
-            self.tail = Some(curr);
-            self.len -= 1;
-            Ok(val)
-        }
-    }
-}
-```
-
-- **描述**:
-
-  - 如果链表为空，返回 `EmptyList` 错误。
-  - 如果链表只有一个节点，调用 `pop_head`。
-  - 如果链表有多个节点，遍历到倒数第二个节点，调用 `remove` 移除最后一个节点，并更新 `tail` 指向新的最后一个节点，减少长度。
-
-- **注意**: 虽然表格中将 `pop_back` 的时间复杂度标记为 O(1)，但实际上由于需要遍历到倒数第二个节点，其时间复杂度为 O(n)。这是因为该链表是单向链表，无法直接访问前驱节点。
-
-#### 5. 插入 (`insert`)
-
-- **操作**: 在指定索引位置插入一个新节点。
-- **时间复杂度**: O(n)
-- **返回值**:
-  - `Ok(())`：成功插入。
-  - `LinkedListError::InsertOutOfRange`：插入位置超出范围时返回错误。
-
-**实现方式**:
-
-```rust
-pub fn insert(&mut self, val: &T, at: usize) -> Result<(), LinkedListError> {
-    if at == 0 {
-        self.push_head(val);
-        Ok(())
-    } else if (0 < at) && (at < self.len + 1) {
-        let mut curr = self.head.as_ref().unwrap().clone();
-        for _ in 0..at - 1 {
-            let node = curr.borrow().next.as_ref().unwrap().clone();
-            curr = node;
-        }
-        curr.borrow_mut().insert(val);
-        self.len += 1;
-        Ok(())
-    } else {
-        Err(LinkedListError::InsertOutOfRange)
-    }
-}
-```
-
-- **描述**:
-  - 如果插入位置为 0，调用 `push_head`。
-  - 如果插入位置在有效范围内，遍历到目标位置前一个节点，调用该节点的 `insert` 方法插入新节点，增加长度。
-  - 如果插入位置超出范围，返回 `InsertOutOfRange` 错误。
-
-#### 6. 删除 (`remove`)
-
-- **操作**: 移除并返回指定索引位置的节点值。
-- **时间复杂度**: O(n)
-- **返回值**:
-  - `Ok(T)`：成功移除并返回值。
-  - `LinkedListError::RemoveOutOfRange`：删除位置超出范围时返回错误。
-  - `LinkedListError::RemoveFromEmptyList`：链表为空时返回错误。
-
-**实现方式**:
-
-```rust
-pub fn remove(&mut self, at: usize) -> Result<T, LinkedListError> {
-    if at == 0 {
-        if self.len == 0 {
-            return Err(LinkedListError::RemoveFromEmptyList);
-        }
-        self.pop_head()
-    } else if (0 < at) && (at < self.len) {
-        let mut curr = self.head.as_ref().unwrap().clone();
-        for _ in 0..at - 1 {
-            let node = curr.borrow().next.as_ref().unwrap().clone();
-            curr = node;
-        }
-        let val = curr.borrow_mut().remove().unwrap();
-        self.len -= 1;
-        Ok(val)
-    } else {
-        Err(LinkedListError::RemoveOutOfRange)
-    }
-}
-```
-
-- **描述**:
-  - 如果删除位置为 0，且链表为空，返回 `RemoveFromEmptyList` 错误；否则，调用 `pop_head`。
-  - 如果删除位置在有效范围内，遍历到目标位置前一个节点，调用该节点的 `remove` 方法移除目标节点，减少长度，返回值。
-  - 如果删除位置超出范围，返回 `RemoveOutOfRange` 错误。
-
-#### 7. 逆向查找 (`val2ix`)
-
-- **操作**: 查找所有值等于给定值的节点索引。
-- **时间复杂度**: O(n)
-- **返回值**: `Vec<usize>`
-
-**实现方式**:
-
-```rust
-pub fn val2ix(&self, val: &T) -> Vec<usize> {
-    if self.len() == 0 {
-        return vec![];
-    }
-    let mut curr = self.head.as_ref().unwrap().clone();
-    let mut res = vec![];
-    for ix in 0..self.len - 1 {
-        if curr.borrow().value == *val {
-            res.push(ix);
-        }
-        let node = curr.borrow().next.as_ref().unwrap().clone();
-        curr = node;
-    }
-    if curr.borrow().value == *val {
-        res.push(self.len - 1);
-    }
-    res
-}
-```
-
-- **描述**:
-  - 如果链表为空，返回空向量。
-  - 遍历整个链表，比较每个节点的值与给定值是否相等。
-  - 如果相等，将当前索引加入结果向量。
-  - 最后返回包含所有匹配索引的向量。
-
-#### 8. 查找 (`ix2val` & `get`)
-
-- **操作**: 根据索引查找节点的值。
-- **时间复杂度**: O(n)
-- **返回值**: `Option<T>`
-
-**实现方式**:
-
-```rust
-pub fn ix2val(&self, ix: usize) -> Option<T> {
-    if ix >= self.len {
-        return None;
-    }
-    let mut curr = self.head.as_ref().unwrap().clone();
-    for _ in 0..ix {
-        let node = curr.borrow().next.as_ref().unwrap().clone();
-        curr = node;
-    }
-    Some(curr.borrow().value.clone())
-}
-
-pub fn get(&self, ix: usize) -> Option<T> {
-    self.ix2val(ix)
-}
-```
-
-- **描述**:
-  - 检查索引是否在有效范围内（`0 <= ix < len`）。如果不在，返回 `None`。
-  - 遍历到指定索引的节点，返回其值的克隆。
-  - `get` 方法是 `ix2val` 的别名，提供相同的功能。
-
-#### 9. 获取长度 (`len`)
-
-- **操作**: 获取链表的当前长度。
-- **时间复杂度**: O(1)
-- **返回值**: `self.len`
-
-**实现方式**:
-
-```rust
-pub fn len(&self) -> usize {
-    self.len
-}
-```
-
-- **描述**:
-  - 直接返回链表的长度属性 `self.len`。
-
-#### 10. 清除 (`clean`)
-
-- **操作**: 清空链表，移除所有节点。
-- **时间复杂度**: O(n)
-- **返回值**: `()`
-
-**实现方式**:
-
-```rust
-pub fn clean(&mut self) {
-    self.tail = None;
-    self.head = None;
-    self.len = 0;
-}
-```
-
-- **描述**:
-  - 将 `head` 和 `tail` 设为 `None`，并将长度 `self.len` 设为 0。
-  - 虽然在实现中看似是 O(1)，但由于涉及到引用计数和垃圾回收，实际的内存清理可能需要 O(n) 的时间。
-
-#### 11. 获取迭代器 (`no_move_iter`)
-
-- **操作**: 获取一个迭代器，用于遍历链表中的值，而不移动链表的所有权。
-- **时间复杂度**: O(1)
-- **返回值**: `LinkedListIterator<T>`
-
-**实现方式**:
-
-```rust
-pub fn no_move_iter(&self) -> LinkedListIterator<T> {
-    LinkedListIterator::new(self.head.clone())
-}
-```
-
-- **描述**:
-  - 创建一个新的 `LinkedListIterator`，并传入链表的 `head` 节点的克隆。
-  - 由于使用了引用计数指针 (`Rc`)，克隆操作是 O(1) 的。
-
-### 额外说明
-
-#### `pop_back` 时间复杂度的纠正
-
-在你提供的表格中，`pop_back` 的时间复杂度标记为 O(1)，但实际上在单向链表中，移除尾节点需要遍历到倒数第二个节点，因此时间复杂度为 O(n)。除非使用双向链表或维护前驱指针，否则无法实现真正的 O(1) 尾删操作。
-
-### 总结
-
-通过以上详细的函数实现描述，你可以更清晰地理解每个操作在 `LinkedList` 中的实现方式及其时间复杂度。如果有任何进一步的问题或需要更深入的解释，请随时告诉我！
-
-## 如何实现迭代器
+## 3. 如何实现迭代器
 
 迭代器和迭代修饰器是Rust里一大利器。他让我们很方便地取代循环操作。这里我们要自己实现一个关于LinkedListNode的迭代器，有两种制造函数的实现：
 
@@ -683,7 +377,7 @@ impl<T: Clone> Iterator for LinkedListIterator<T> {
 
 然后我们分别对两种不同的迭代器制造函数进行实现：
 
-### `into_iter()`
+### 3.1. `into_iter()`
 
 这里我们只需要实现`IntoIterator`的`into_iter()`方法，然后把所有权交给迭代器即可：
 
@@ -700,7 +394,7 @@ impl<T: Clone> IntoIterator for LinkedList<T> {
 
 这里的注释的意思是：不要使用`self.head.clone()`，这样会增加引用计数，带来不必要的开销，因为`self.head`此时已经没有意义了。
 
-### `no_move_iter()`
+### 3.2. `no_move_iter()`
 
 我们在`impl<T> LinkedList<T>`的时候来做这个工作。它过于简单就不在这里详解了：
 

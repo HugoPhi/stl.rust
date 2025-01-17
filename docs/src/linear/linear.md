@@ -2,7 +2,7 @@
 
 > A data structure is said to be linear if its elements form a sequence
 >
-> <p align=right>--Wiki</p>
+> <p align=right>——Wiki</p>
 
 线性数据结构是一种数据元素按照顺序排列的数据结构，每个元素都有一个前驱和后继元素，数据之间存在线性关系。常见的线性数据结构包括 数组、链表、栈 和 队列。这些数据结构的特点是元素按照一定的顺序依次存储，用户可以顺序地访问和操作其中的元素。
 

@@ -309,7 +309,6 @@ pub struct LinkedList<T> {
 | `LinkedListError::RemoveFromEmptyList` | 当进行 **remove** 操作时，如果链表为空，则返回此错误。 |
 | `LinkedListError::NextIsNone` | 在进行链表遍历时，如果 `next` 指针为 `None`，则返回此错误，表示链表结束或发生其他错误。 |
 
-
 ### 2.3. 各种长度对应的链表的数据形态
 
 #### 2.3.1 `len == 0`
@@ -318,21 +317,17 @@ pub struct LinkedList<T> {
     <img src="./assets/rc_case1.svg" alt="case1" style="width: 35%;" />
 </div>
 
-
 #### 2.3.2 `len == 1`
-
 
 <div style="text-align: center;">
     <img src="./assets/rc_case2.svg" alt="case2" style="width: 50%;" />
 </div>
-
 
 #### 2.3.3 `len >= 2`
 
 <div style="text-align: center;">
     <img src="./assets/rc_case3.svg" alt="case3" style="width: 80%;" />
 </div>
-
 
 ## 3. 如何实现迭代器
 

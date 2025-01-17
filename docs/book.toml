@@ -3,7 +3,10 @@ authors = ["HugoPhi"]
 language = "en"
 multilingual = false
 src = "src"
-title = "Document for stl.rust"
+title = "Data Structures in Rust by Hand"
 
+[output.html]
+default-theme = "dark"
+preferred-dark-theme = "Ayu"
 
 [preprocessor.katex]

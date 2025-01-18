@@ -3,7 +3,6 @@
 
 [Data Structures in Rust by Hand](./page.md)
 
---- 
 [✨ Introduction](./0.md)
 
 - [Lineared Structures](./linear/linear.md)

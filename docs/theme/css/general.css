@@ -8,7 +8,7 @@
 
 /* font-family: "Open Sans", "SC"; */
 html {
-  font-family: "Manjari", "SC";
+  font-family: "Open Sans", "SC";
   color: var(--fg);
   background-color: var(--bg);
   text-size-adjust: none;

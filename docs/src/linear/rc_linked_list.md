@@ -65,7 +65,7 @@ struct LinkedList<T> {
 
 这是因为Rust严格管控引用的生命周期，为了防止悬空引用，Rust在检查时必须保证被指向的部分的生命周期小于等于所有者的生命周期，即：
 
-$$
+> $$
 
 引用的生命周期 \le 被引用者的生命周期
 
@@ -80,8 +80,8 @@ struct LinkedList<'a, T> {
 }
 ```
 
-目前编译器已经不报错了。那么是不是完成了？并不是，如果这时候你去初始化，你会发现你将无穷无尽地初始化下去，因为没有空的引用，所以next必须指向一个实例化的LinkedList 。
-如何解决这个问题？这时候只需要使用Option\<>这个特殊的枚举类就可以了。具体我就不解释了，直接看代码：
+目前编译器已经不报错了。那么是不是完成了？并不是，如果这时候你去初始化，你会发现你将无穷无尽地初始化下去，因为没有空的引用，所以`next`必须指向一个实例化的`LinkedList` 。
+如何解决这个问题？这时候只需要使用`Option<>`这个特殊的枚举类就可以了。具体我就不解释了，直接看代码：
 
 ```rust
 struct LinkedList<'a, T> {
@@ -141,10 +141,10 @@ x.next = Some(&mut LinkedList::<i32>::new(4));
 
 > temporary value dropped while borrowed creates a temporary value which is freed while still in use
 
-因为这个时候你的`LinkedList::<i32>::new(4)`是一个临时变量，而且你并未对他的所有者进行指派，所以在本行内它就会被释放，因此对他的可变借用的生命周期也是在本行内，然后根据我们之前的定义，x的生命周期应该小于这个可变借用，显然不符合规范，因此报错。
+因为这个时候你的`LinkedList::<i32>::new(4)`是一个临时变量，而且你并未对他的所有者进行指派，所以在本行内它就会被释放，因此对他的可变借用的生命周期也是在本行内，然后根据我们之前的定义，`x`的生命周期应该小于这个可变借用，显然不符合规范，因此报错。
 所以我们要先把它指派给一个变量binding，这样它和x在同一作用域，生命周期相同，所以就不会报错了。
 
-从某种程度上来说，这算是一个解决办法，但是你会发现如果我们要创建一个长度为10的链表，那么我们需要中间变量10个！而且你还不能释放他们，因为如果他们被释放，那么他们其中之一的生命周期就会小于x，那么就不符合生命周期的检查。
+从某种程度上来说，这算是一个解决办法，但是你会发现如果我们要创建一个长度为10的链表，那么我们需要中间变量10个！而且你还不能释放他们，因为如果他们被释放，那么他们其中之一的生命周期就会小于`x`，那么就不符合生命周期的检查。
 这显然不符合我们的预期，而且非常不符合实际，如果我们需要一个$10^{20}$个元素的链表，是不是要创建$10^{20}$个中间变量？
 
 > ## Rust的安全性和开发负担
@@ -215,7 +215,7 @@ x.next = Some(&mut LinkedList::<i32>::new(4));
 
 事实上我们刚刚一直在做一件蠢事：把链表存储在栈内存上。在栈上，我们无法控制它的生命周期，无论在rust还是在C语言里。比如，如果我们把插入操作包装到函数里，等跳出函数，无论C还是Rust都会释放掉栈内存中的临时数据，这样无论如何都无法在函数弹栈之后保留我们的链表。
 
-因此救赎之道就在其中，我们需要申请堆内存。然而在Rust中，这个任务就交给智能指针了。这里我们选用了Rc\<RefCell\<>>作为智能指针，原因有两点：
+因此救赎之道就在其中，我们需要申请堆内存。然而在Rust中，这个任务就交给智能指针了。这里我们选用了`Rc<RefCell<>>`作为智能指针，原因有两点：
 
 - 可以加入尾指针，方便高频的尾部插入操作
 - 可以方便地实现借用迭代器方法
@@ -248,14 +248,6 @@ enum LinkedListNode<T> {
 struct LinkedListNode<T> {
     value: T,
     next: Option<Box<LinkedListNode<T>>>,
-}
-```
-
-此时借用迭代器就是：
-
-```rust
-struct BorrowMutIterator<'a, T> {
-    curr: Option<&'a mut LinkedListNode<T>>,
 }
 ```
 
@@ -307,27 +299,33 @@ pub struct LinkedList<T> {
 | `LinkedListError::InsertOutOfRange` | 当 **insert** 要插入元素的位置没有在$[0, len]$，返回此错误。 |
 | `LinkedListError::RemoveOutOfRange` | 当 **remove** 要删除的位置没在$[0, len)$，返回此错误。 |
 | `LinkedListError::RemoveFromEmptyList` | 当进行 **remove** 操作时，如果链表为空，则返回此错误。 |
-| `LinkedListError::NextIsNone` | 在进行链表遍历时，如果 `next` 指针为 `None`，则返回此错误，表示链表结束或发生其他错误。 |
+| `LinkedListError::RemoveWhileNextIsNone` | 在进行链表遍历时，如果 `next` 指针为 `None`，则返回此错误，表示链表结束或发生其他错误。 |
 
 ### 2.3. 各种长度对应的链表的数据形态
 
-#### `len == 0`
+#### # `len == 0`
 
 <div style="text-align: center;">
-    <img src="./assets/rc_case1.svg" alt="case1" style="width: 35%;" />
+    <img src="./assets/rc_case1.svg" alt="case1" style="width: 40%;" />
 </div>
 
-#### `len == 1`
+#### # `len == 1`
 
 <div style="text-align: center;">
-    <img src="./assets/rc_case2.svg" alt="case2" style="width: 50%;" />
+    <img src="./assets/rc_case2.svg" alt="case2" style="width: 60%;" />
 </div>
 
-#### `len >= 2`
+#### # `len >= 2`
 
 <div style="text-align: center;">
     <img src="./assets/rc_case3.svg" alt="case3" style="width: 80%;" />
 </div>
+
+### 2.4. 一些在实现中比较棘手的问题
+
+#### # 我们应该避免什么操作？
+
+#### # `Rc<RefCell<LinkedListNode<T>>>`如何获取数据的各个部分的各种形式。
 
 ## 3. 如何实现迭代器
 

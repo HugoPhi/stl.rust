@@ -6,20 +6,20 @@
   font-family: 'Source Code Pro';
   font-style: normal;
   font-weight: 500;
-  src: url('source-code-pro-v11-all-charsets-500.woff2') format('woff2');
+  src: url('HasklugNerdFontMono-Regular.otf') format('opentype');
 }
 
 
 @font-face {
   font-family: "Manjari";
-  src: url("../fonts/Manjari-Regular.otf") format("opentype");
+  src: url("Manjari-Regular.otf") format("opentype");
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: "SC";
-  src: url("../fonts/NotoSerifSC-Regular.ttf") format("truetype");
+  src: url("NotoSerifSC-Regular.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
 }

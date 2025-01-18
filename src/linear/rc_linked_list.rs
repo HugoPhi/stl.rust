@@ -1,4 +1,5 @@
-use std::{cell::RefCell, fmt, rc::Rc};
+use std::fmt;
+use std::{cell::RefCell, ops::Deref, rc::Rc};
 
 /// `LinkedListNode` represents a single node in a linked list containing a value and a reference to the next node.
 #[derive(Debug, Clone)]
@@ -25,7 +26,7 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use hym::LinkedListNode;
+    /// use hym::rc_linked_list::LinkedListNode;
     ///
     /// let node = LinkedListNode::new(1, None);
     /// ```
@@ -36,7 +37,7 @@ where
         }
     }
 
-    /// Returns a reference to the next node in the list.
+    /// Returns a reference to the next node in the node.
     ///
     /// # Returns
     ///
@@ -106,13 +107,12 @@ where
     ///
     /// ```
     pub fn remove(&mut self) -> Result<T, LinkedListError> {
-        if let Some(node) = self.next.as_ref() {
-            let next_ptr = node.borrow().next();
-            let val = node.borrow().value.clone();
-            self.next = next_ptr;
-            Ok(val)
+        if self.next.is_none() {
+            Err(LinkedListError::RemoveWhileNextIsNone)
         } else {
-            Err(LinkedListError::NextIsNone)
+            let next_ptr = self.next.take().unwrap();
+            self.next = next_ptr.borrow_mut().next.take();
+            Ok(next_ptr.deref().clone().into_inner().value)
         }
     }
 }
@@ -126,7 +126,7 @@ impl<T: Default> Default for LinkedListNode<T> {
     }
 }
 
-/// A linked list that supports common operations such as adding and removing elements.
+/// A linked list that supports common operations such as adding and removing elements by Rc + RefCell ptr.
 ///
 /// # Attributes
 ///
@@ -179,13 +179,22 @@ pub struct LinkedList<T> {
 }
 
 /// Enum for different types of errors that can occur while manipulating the linked list.
+///
+/// # Explanation
+///
+/// - EmptyList: The list is empty.
+/// - InsertOutOfRange: An insert operation is out of range.
+/// - RemoveOutOfRange: A remove operation is out of range.
+/// - RemoveFromEmptyList: Trying to remove from an empty list.
+/// - RemoveWhileNextIsNone: The next node is `None`.
+///
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum LinkedListError {
-    EmptyList,           // Error when the list is empty.
-    InsertOutOfRange,    // Error when an insert operation is out of range.
-    RemoveOutOfRange,    // Error when a remove operation is out of range.
-    RemoveFromEmptyList, // Error when trying to remove from an empty list.
-    NextIsNone,          // Error when the next node is `None`.
+    EmptyList,             // Error when the list is empty.
+    InsertOutOfRange,      // Error when an insert operation is out of range.
+    RemoveOutOfRange,      // Error when a remove operation is out of range.
+    RemoveFromEmptyList,   // Error when trying to remove from an empty list.
+    RemoveWhileNextIsNone, // Error when the next node is `None`.
 }
 
 impl<T> LinkedList<T>
@@ -201,17 +210,13 @@ where
     /// # Examples  
     ///
     /// ```rust
-    /// use hym::LinkedList;
+    /// use hym::rc_linked_list::LinkedList;
     ///
     /// let list: LinkedList<i32> = LinkedList::new();
     /// assert_eq!(format!("{}", list), "()");
     /// ```
     pub fn new() -> Self {
-        LinkedList {
-            len: 0,
-            head: None,
-            tail: None,
-        }
+        Self::default()
     }
 
     /// Adds a new node with the given value to the front (head) of the list.
@@ -223,7 +228,7 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use hym::LinkedList;
+    /// use hym::rc_linked_list::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
     /// list.push_head(1);
@@ -262,7 +267,7 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use hym::LinkedList;
+    /// use hym::rc_linked_list::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
     /// list.push_back(1);
@@ -304,7 +309,7 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use hym::LinkedList;
+    /// use hym::rc_linked_list::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
     /// list.push_head(1);
@@ -316,11 +321,11 @@ where
     /// ```
     ///
     /// ```rust
-    /// use hym::LinkedList;
-    /// use hym::LinkedListError;
+    /// use hym::rc_linked_list::LinkedList;
+    /// use hym::rc_linked_list::LinkedListError;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
-    /// assert_eq!(list.pop_head(), Err(hym::LinkedListError::EmptyList));
+    /// assert_eq!(list.pop_head(), Err(hym::rc_linked_list::LinkedListError::EmptyList));
     /// ```
     ///
     /// # Complexity
@@ -362,7 +367,7 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use hym::LinkedList;
+    /// use hym::rc_linked_list::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
     /// list.push_head(1);
@@ -374,11 +379,11 @@ where
     /// ```
     ///
     /// ```rust
-    /// use hym::LinkedList;
-    /// use hym::LinkedListError;
+    /// use hym::rc_linked_list::LinkedList;
+    /// use hym::rc_linked_list::LinkedListError;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
-    /// assert_eq!(list.pop_back(), Err(hym::LinkedListError::EmptyList));
+    /// assert_eq!(list.pop_back(), Err(hym::rc_linked_list::LinkedListError::EmptyList));
     /// ```
     ///
     /// # Complexity
@@ -393,7 +398,7 @@ where
             _ => {
                 let mut curr = self.head.as_ref().unwrap().clone();
                 for _ in 0..self.len - 2 {
-                    let node = curr.borrow_mut().next.as_ref().unwrap().clone();
+                    let node = curr.borrow().next.as_ref().unwrap().clone();
                     curr = node;
                 }
                 let val = curr.borrow_mut().remove().unwrap();
@@ -424,7 +429,7 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use hym::LinkedList;
+    /// use hym::rc_linked_list::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
     /// list.push_head(1);
@@ -436,11 +441,11 @@ where
     /// ```
     ///
     /// ```rust
-    /// use hym::LinkedList;
-    /// use hym::LinkedListError;
+    /// use hym::rc_linked_list::LinkedList;
+    /// use hym::rc_linked_list::LinkedListError;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
-    /// assert_eq!(list.insert(4, 2), Err(hym::LinkedListError::InsertOutOfRange));
+    /// assert_eq!(list.insert(4, 2), Err(hym::rc_linked_list::LinkedListError::InsertOutOfRange));
     /// ```
     ///
     /// # Complexity
@@ -485,7 +490,7 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use hym::LinkedList;
+    /// use hym::rc_linked_list::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
     /// list.push_head(1);
@@ -497,19 +502,19 @@ where
     /// ```
     ///
     /// ```rust
-    /// use hym::LinkedList;
-    /// use hym::LinkedListError;
+    /// use hym::rc_linked_list::LinkedList;
+    /// use hym::rc_linked_list::LinkedListError;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
-    /// assert_eq!(list.remove(0), Err(hym::LinkedListError::RemoveFromEmptyList));
+    /// assert_eq!(list.remove(0), Err(hym::rc_linked_list::LinkedListError::RemoveFromEmptyList));
     /// ```
     ///
     /// ```rust
-    /// use hym::LinkedList;
-    /// use hym::LinkedListError;
+    /// use hym::rc_linked_list::LinkedList;
+    /// use hym::rc_linked_list::LinkedListError;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
-    /// assert_eq!(list.remove(1), Err(hym::LinkedListError::RemoveOutOfRange));
+    /// assert_eq!(list.remove(1), Err(hym::rc_linked_list::LinkedListError::RemoveOutOfRange));
     /// ```
     ///
     /// # Complexity
@@ -532,6 +537,7 @@ where
             let val = curr.borrow_mut().remove().unwrap();
             self.len -= 1;
             Ok(val)
+            /* curr.borrow_mut().remove() // why not ? */
         } else {
             Err(LinkedListError::RemoveOutOfRange)
         }
@@ -550,7 +556,7 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use hym::LinkedList;
+    /// use hym::rc_linked_list::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
     /// list.push_head(1);
@@ -563,7 +569,7 @@ where
     /// ```
     ///
     /// ```rust
-    /// use hym::LinkedList;
+    /// use hym::rc_linked_list::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
     /// assert_eq!(list.val2ix(&2), vec![]);
@@ -607,7 +613,7 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use hym::LinkedList;
+    /// use hym::rc_linked_list::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
     /// list.push_head(1);
@@ -618,7 +624,7 @@ where
     /// ```
     ///
     /// ```rust
-    /// use hym::LinkedList;
+    /// use hym::rc_linked_list::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
     /// assert_eq!(list.ix2val(0), None);
@@ -650,7 +656,7 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use hym::LinkedList;
+    /// use hym::rc_linked_list::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
     /// list.push_head(1);
@@ -672,7 +678,7 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use hym::LinkedList;
+    /// use hym::rc_linked_list::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
     /// list.push_head(1);
@@ -685,12 +691,31 @@ where
         self.len
     }
 
+    /// Checks if the list is empty.
+    ///
+    /// # Returns
+    ///
+    /// * `true` - If the list is empty.
+    /// * `false` - If the list is not empty.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use hym::rc_linked_list::LinkedList;
+    ///
+    /// let mut list: LinkedList<i32> = LinkedList::new();
+    /// assert!(list.is_empty());
+    /// ```
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
     /// Clears the list by removing all nodes.
     ///
     /// # Examples
     ///
     /// ```rust
-    /// use hym::LinkedList;
+    /// use hym::rc_linked_list::LinkedList;
     ///
     /// let mut list: LinkedList<i32> = LinkedList::new();
     /// list.push_head(1);
@@ -706,44 +731,18 @@ where
         self.len = 0;
     }
 
-    /// Creates a new linked list from a vector of values.
-    ///
-    /// # Arguments
-    ///
-    /// * `vals` - A vector of values to initialize the linked list.
-    ///
-    /// # Returns
-    ///
-    /// A new `LinkedList` containing the values from the vector.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use hym::LinkedList;
-    ///
-    /// let list: LinkedList<i32> = LinkedList::from_vec(vec![1, 2, 3]);
-    /// assert_eq!(format!("{}", list), "(1 -> 2 -> 3)");
-    /// ```
-    pub fn from_vec(vals: Vec<T>) -> Self {
-        let mut list = LinkedList::new();
-        for val in vals {
-            list.push_back(val);
-        }
-        list
-    }
-
     /// Returns an iterator over the values in the linked list without move the ownership of `self`  
-    /// 
+    ///
     /// # Returns
     ///
-    /// A `inkedListIterator<T>` which will get the clone value of each node. 
+    /// A `inkedListIterator<T>` which will get the clone value of each node.
     ///
     /// # Examples
     ///
     /// ```rust
-    /// use hym::LinkedList;
+    /// use hym::rc_linked_list::LinkedList;
     ///
-    /// let list: LinkedList<i32> = LinkedList::from_vec(vec![1, 2, 3, 4, 5, 6]);
+    /// let list: LinkedList<i32> = LinkedList::from_iter(vec![1, 2, 3, 4, 5, 6]);
     /// let it = list.no_move_iter().map(|x| x * x);
     /// let vec = it.collect::<Vec<_>>();
     ///
@@ -752,6 +751,29 @@ where
     /// ```
     pub fn no_move_iter(&self) -> LinkedListIterator<T> {
         LinkedListIterator::new(self.head.clone()) // use clone to avoid move of self.head if you use Box<> impled LinkedList this is not able to complemented
+    }
+}
+
+impl<T> Default for LinkedList<T> {
+    fn default() -> Self {
+        LinkedList {
+            len: 0,
+            head: None,
+            tail: None,
+        }
+    }
+}
+
+impl<T> FromIterator<T> for LinkedList<T>
+where
+    T: Clone + std::cmp::PartialEq,
+{
+    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
+        let mut list = LinkedList::new();
+        for val in iter {
+            list.push_back(val);
+        }
+        list
     }
 }
 
@@ -1073,24 +1095,28 @@ mod tests {
     }
 
     #[test]
-    fn test_from_vec() {
+    fn test_from_iter() {
         // Test creating a list from a vector
-        let list: LinkedList<i32> = LinkedList::from_vec(vec![]);
+        let list: LinkedList<i32> = LinkedList::from_iter(vec![]);
         assert_eq!(list.len(), 0); // Empty list
         assert_eq!(format!("{}", list), "()");
 
-        let list = LinkedList::from_vec(vec![1, 2, 3]);
+        let list = LinkedList::from_iter(vec![1, 2, 3]);
         assert_eq!(list.len(), 3); // List should contain 3 elements
         assert_eq!(format!("{}", list), "(1 -> 2 -> 3)");
 
-        let list = LinkedList::from_vec(vec![1, 1, 1, 1]);
+        let list = LinkedList::from_iter(vec![1, 1, 1, 1]);
+        assert_eq!(list.len(), 4); // List should contain 4 elements
+        assert_eq!(format!("{}", list), "(1 -> 1 -> 1 -> 1)");
+
+        let list = LinkedList::from_iter(vec![1, 1, 1, 1].into_iter());
         assert_eq!(list.len(), 4); // List should contain 4 elements
         assert_eq!(format!("{}", list), "(1 -> 1 -> 1 -> 1)");
     }
 
     #[test]
     fn test_into_iter() {
-        let list: LinkedList<i32> = LinkedList::from_vec(vec![1, 2, 3, 4, 5, 6]);
+        let list: LinkedList<i32> = LinkedList::from_iter(vec![1, 2, 3, 4, 5, 6]);
 
         let it = list.into_iter(); // list is moved
 
@@ -1101,7 +1127,7 @@ mod tests {
 
     #[test]
     fn test_iter() {
-        let list: LinkedList<i32> = LinkedList::from_vec(vec![1, 2, 3, 4, 5, 6]);
+        let list: LinkedList<i32> = LinkedList::from_iter(vec![1, 2, 3, 4, 5, 6]);
 
         let it = list.no_move_iter().map(|x| x * x);
 
@@ -1109,5 +1135,13 @@ mod tests {
 
         assert_eq!(format!("{}", list), "(1 -> 2 -> 3 -> 4 -> 5 -> 6)");
         assert_eq!(vec, vec![1, 4, 9, 16, 25, 36]);
+    }
+
+    #[test]
+    fn test_is_empty() {
+        let mut list = LinkedList::new();
+        assert!(list.is_empty());
+        list.push_back(1);
+        assert!(!list.is_empty());
     }
 }

@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html lang="en" class="dark sidebar-visible" dir="ltr">
+<html lang="zh" class="light sidebar-visible" dir="ltr">
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
@@ -34,7 +34,7 @@
         <!-- Provide site root to javascript -->
         <script>
             var path_to_root = "../";
-            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "ayu" : "dark";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "rust" : "light";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc.js"></script>
@@ -63,7 +63,7 @@
             try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
             if (theme === null || theme === undefined) { theme = default_theme; }
             const html = document.documentElement;
-            html.classList.remove('dark')
+            html.classList.remove('light')
             html.classList.add(theme);
             html.classList.add("js");
         </script>
@@ -125,6 +125,9 @@
                     <div class="right-buttons">
                         <a href="../print.html" title="Print this book" aria-label="Print this book">
                             <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/HugoPhi/stl.rust" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
                         </a>
 
                     </div>
@@ -201,7 +204,9 @@
 <p>missing lifetime specifier expected named lifetime parameter</p>
 </blockquote>
 <p>这是因为Rust严格管控引用的生命周期，为了防止悬空引用，Rust在检查时必须保证被指向的部分的生命周期小于等于所有者的生命周期，即：</p>
+<blockquote>
 <p><span class="katex-display"><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8193em;vertical-align:-0.136em;"></span><span class="mord cjk_fallback">引用的生命周期</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord cjk_fallback">被引用者的生命周期</span></span></span></span></span></p>
+</blockquote>
 <p>而这里没有明确说明，因此我们必须显示声明出生命周期，如下所示：</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -210,8 +215,8 @@
     next: &amp;'a mut LinkedList&lt;'a, T&gt;,
 }
 <span class="boring">}</span></code></pre></pre>
-<p>目前编译器已经不报错了。那么是不是完成了？并不是，如果这时候你去初始化，你会发现你将无穷无尽地初始化下去，因为没有空的引用，所以next必须指向一个实例化的LinkedList 。
-如何解决这个问题？这时候只需要使用Option&lt;&gt;这个特殊的枚举类就可以了。具体我就不解释了，直接看代码：</p>
+<p>目前编译器已经不报错了。那么是不是完成了？并不是，如果这时候你去初始化，你会发现你将无穷无尽地初始化下去，因为没有空的引用，所以<code>next</code>必须指向一个实例化的<code>LinkedList</code> 。
+如何解决这个问题？这时候只需要使用<code>Option&lt;&gt;</code>这个特殊的枚举类就可以了。具体我就不解释了，直接看代码：</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>struct LinkedList&lt;'a, T&gt; {
@@ -264,9 +269,9 @@ fn main() {
 <blockquote>
 <p>temporary value dropped while borrowed creates a temporary value which is freed while still in use</p>
 </blockquote>
-<p>因为这个时候你的<code>LinkedList::&lt;i32&gt;::new(4)</code>是一个临时变量，而且你并未对他的所有者进行指派，所以在本行内它就会被释放，因此对他的可变借用的生命周期也是在本行内，然后根据我们之前的定义，x的生命周期应该小于这个可变借用，显然不符合规范，因此报错。
+<p>因为这个时候你的<code>LinkedList::&lt;i32&gt;::new(4)</code>是一个临时变量，而且你并未对他的所有者进行指派，所以在本行内它就会被释放，因此对他的可变借用的生命周期也是在本行内，然后根据我们之前的定义，<code>x</code>的生命周期应该小于这个可变借用，显然不符合规范，因此报错。
 所以我们要先把它指派给一个变量binding，这样它和x在同一作用域，生命周期相同，所以就不会报错了。</p>
-<p>从某种程度上来说，这算是一个解决办法，但是你会发现如果我们要创建一个长度为10的链表，那么我们需要中间变量10个！而且你还不能释放他们，因为如果他们被释放，那么他们其中之一的生命周期就会小于x，那么就不符合生命周期的检查。
+<p>从某种程度上来说，这算是一个解决办法，但是你会发现如果我们要创建一个长度为10的链表，那么我们需要中间变量10个！而且你还不能释放他们，因为如果他们被释放，那么他们其中之一的生命周期就会小于<code>x</code>，那么就不符合生命周期的检查。
 这显然不符合我们的预期，而且非常不符合实际，如果我们需要一个<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">20</span></span></span></span></span></span></span></span></span></span></span></span>个元素的链表，是不是要创建<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">20</span></span></span></span></span></span></span></span></span></span></span></span>个中间变量？</p>
 <blockquote>
 <h2 id="rust的安全性和开发负担"><a class="header" href="#rust的安全性和开发负担">Rust的安全性和开发负担</a></h2>
@@ -332,7 +337,7 @@ int main(int argc, char *argv[]) {
 <p>这里<code>foo1</code>就是忘记释放内存，<code>foo2</code>就是悬空引用。</p>
 </blockquote>
 <p>事实上我们刚刚一直在做一件蠢事：把链表存储在栈内存上。在栈上，我们无法控制它的生命周期，无论在rust还是在C语言里。比如，如果我们把插入操作包装到函数里，等跳出函数，无论C还是Rust都会释放掉栈内存中的临时数据，这样无论如何都无法在函数弹栈之后保留我们的链表。</p>
-<p>因此救赎之道就在其中，我们需要申请堆内存。然而在Rust中，这个任务就交给智能指针了。这里我们选用了Rc&lt;RefCell&lt;&gt;&gt;作为智能指针，原因有两点：</p>
+<p>因此救赎之道就在其中，我们需要申请堆内存。然而在Rust中，这个任务就交给智能指针了。这里我们选用了<code>Rc&lt;RefCell&lt;&gt;&gt;</code>作为智能指针，原因有两点：</p>
 <ul>
 <li>可以加入尾指针，方便高频的尾部插入操作</li>
 <li>可以方便地实现借用迭代器方法</li>
@@ -365,13 +370,6 @@ int main(int argc, char *argv[]) {
 </span>struct LinkedListNode&lt;T&gt; {
     value: T,
     next: Option&lt;Box&lt;LinkedListNode&lt;T&gt;&gt;&gt;,
-}
-<span class="boring">}</span></code></pre></pre>
-<p>此时借用迭代器就是：</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>struct BorrowMutIterator&lt;'a, T&gt; {
-    curr: Option&lt;&amp;'a mut LinkedListNode&lt;T&gt;&gt;,
 }
 <span class="boring">}</span></code></pre></pre>
 <ol start="3">
@@ -417,22 +415,25 @@ int main(int argc, char *argv[]) {
 <tr><td><code>LinkedListError::InsertOutOfRange</code></td><td>当 <strong>insert</strong> 要插入元素的位置没有在<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">[</span><span class="mord">0</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.01968em;">l</span><span class="mord mathnormal">e</span><span class="mord mathnormal">n</span><span class="mclose">]</span></span></span></span>，返回此错误。</td></tr>
 <tr><td><code>LinkedListError::RemoveOutOfRange</code></td><td>当 <strong>remove</strong> 要删除的位置没在<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">[</span><span class="mord">0</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.01968em;">l</span><span class="mord mathnormal">e</span><span class="mord mathnormal">n</span><span class="mclose">)</span></span></span></span>，返回此错误。</td></tr>
 <tr><td><code>LinkedListError::RemoveFromEmptyList</code></td><td>当进行 <strong>remove</strong> 操作时，如果链表为空，则返回此错误。</td></tr>
-<tr><td><code>LinkedListError::NextIsNone</code></td><td>在进行链表遍历时，如果 <code>next</code> 指针为 <code>None</code>，则返回此错误，表示链表结束或发生其他错误。</td></tr>
+<tr><td><code>LinkedListError::RemoveWhileNextIsNone</code></td><td>在进行链表遍历时，如果 <code>next</code> 指针为 <code>None</code>，则返回此错误，表示链表结束或发生其他错误。</td></tr>
 </tbody></table>
 </div>
 <h3 id="23-各种长度对应的链表的数据形态"><a class="header" href="#23-各种长度对应的链表的数据形态">2.3. 各种长度对应的链表的数据形态</a></h3>
-<h4 id="len--0"><a class="header" href="#len--0"><code>len == 0</code></a></h4>
+<h4 id="len--0"><a class="header" href="#len--0"># <code>len == 0</code></a></h4>
 <div style="text-align: center;">
-    <img src="./assets/rc_case1.svg" alt="case1" style="width: 35%;" />
+    <img src="./assets/rc_case1.svg" alt="case1" style="width: 40%;" />
 </div>
-<h4 id="len--1"><a class="header" href="#len--1"><code>len == 1</code></a></h4>
+<h4 id="len--1"><a class="header" href="#len--1"># <code>len == 1</code></a></h4>
 <div style="text-align: center;">
-    <img src="./assets/rc_case2.svg" alt="case2" style="width: 50%;" />
+    <img src="./assets/rc_case2.svg" alt="case2" style="width: 60%;" />
 </div>
-<h4 id="len--2"><a class="header" href="#len--2"><code>len &gt;= 2</code></a></h4>
+<h4 id="len--2"><a class="header" href="#len--2"># <code>len &gt;= 2</code></a></h4>
 <div style="text-align: center;">
     <img src="./assets/rc_case3.svg" alt="case3" style="width: 80%;" />
 </div>
+<h3 id="24-一些在实现中比较棘手的问题"><a class="header" href="#24-一些在实现中比较棘手的问题">2.4. 一些在实现中比较棘手的问题</a></h3>
+<h4 id="我们应该避免什么操作"><a class="header" href="#我们应该避免什么操作"># 我们应该避免什么操作？</a></h4>
+<h4 id="rcrefcelllinkedlistnodet如何获取数据的各个部分的各种形式"><a class="header" href="#rcrefcelllinkedlistnodet如何获取数据的各个部分的各种形式"># <code>Rc&lt;RefCell&lt;LinkedListNode&lt;T&gt;&gt;&gt;</code>如何获取数据的各个部分的各种形式。</a></h4>
 <h2 id="3-如何实现迭代器"><a class="header" href="#3-如何实现迭代器">3. 如何实现迭代器</a></h2>
 <p>迭代器和迭代修饰器是Rust里一大利器。他让我们很方便地取代循环操作。这里我们要自己实现一个关于LinkedListNode的迭代器，有两种制造函数的实现：</p>
 <ul>

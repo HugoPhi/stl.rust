@@ -1,6 +1,6 @@
 # Summary
 
-[Data Structures in Rust by Hand](./page.md)
+[Data Structures by Hand](./page.md)
 
 ---
 

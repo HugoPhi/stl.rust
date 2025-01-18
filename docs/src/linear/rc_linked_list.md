@@ -314,13 +314,13 @@ pub struct LinkedList<T> {
 #### `len == 0`
 
 <div style="text-align: center;">
-    <img src="./assets/rc_case1.svg" alt="case1" style="width: 35%;" />
+    <img src="./assets/rc_case1.svg" alt="case1" style="width: 40%;" />
 </div>
 
 #### `len == 1`
 
 <div style="text-align: center;">
-    <img src="./assets/rc_case2.svg" alt="case2" style="width: 50%;" />
+    <img src="./assets/rc_case2.svg" alt="case2" style="width: 60%;" />
 </div>
 
 #### `len >= 2`

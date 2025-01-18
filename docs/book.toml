@@ -1,15 +1,16 @@
 [book]
 authors = ["HugoPhi"]
-language = "en"
+language = "zh"
 multilingual = false
 src = "src"
 title = "Data Structures in Rust by Hand"
 
 [output.html]
 theme = "theme"
-default-theme = "dark"
-preferred-dark-theme = "ayu"
+default-theme = "light"
+preferred-dark-theme = "rust"
 git-repository-url = "https://github.com/HugoPhi/stl.rust"
 git-repository-icon = "fa-github"
 
 [preprocessor.katex]
+

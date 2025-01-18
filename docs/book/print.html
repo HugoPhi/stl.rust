@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html lang="en" class="dark sidebar-visible" dir="ltr">
+<html lang="zh" class="light sidebar-visible" dir="ltr">
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
@@ -35,7 +35,7 @@
         <!-- Provide site root to javascript -->
         <script>
             var path_to_root = "";
-            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "ayu" : "dark";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "rust" : "light";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc.js"></script>
@@ -64,7 +64,7 @@
             try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
             if (theme === null || theme === undefined) { theme = default_theme; }
             const html = document.documentElement;
-            html.classList.remove('dark')
+            html.classList.remove('light')
             html.classList.add(theme);
             html.classList.add("js");
         </script>
@@ -127,6 +127,9 @@
                         <a href="print.html" title="Print this book" aria-label="Print this book">
                             <i id="print-button" class="fa fa-print"></i>
                         </a>
+                        <a href="https://github.com/HugoPhi/stl.rust" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
 
                     </div>
                 </div>
@@ -154,7 +157,8 @@
                 <div id="content" class="content">
                     <main>
                         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css">
-<h1 id="-data-structures-in-rust-by-hand"><a class="header" href="#-data-structures-in-rust-by-hand"><center> ✨ Data Structures in Rust by Hand</a></h1>
+<h1 id="-data-structures-by-hand"><a class="header" href="#-data-structures-by-hand"><center> ✨ Data Structures by Hand</a></h1>
+<h3 id="-implemented-by-rust"><a class="header" href="#-implemented-by-rust"><p align=right>—— implemented by Rust</p></a></h3>
 <hr />
 <p><img src="./assets/page.png" alt="page" /></p>
 <div style="break-before: page; page-break-before: always;"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css">
@@ -523,11 +527,11 @@ int main(int argc, char *argv[]) {
 <h3 id="23-各种长度对应的链表的数据形态"><a class="header" href="#23-各种长度对应的链表的数据形态">2.3. 各种长度对应的链表的数据形态</a></h3>
 <h4 id="len--0"><a class="header" href="#len--0"><code>len == 0</code></a></h4>
 <div style="text-align: center;">
-    <img src="linear/./assets/rc_case1.svg" alt="case1" style="width: 35%;" />
+    <img src="linear/./assets/rc_case1.svg" alt="case1" style="width: 40%;" />
 </div>
 <h4 id="len--1"><a class="header" href="#len--1"><code>len == 1</code></a></h4>
 <div style="text-align: center;">
-    <img src="linear/./assets/rc_case2.svg" alt="case2" style="width: 50%;" />
+    <img src="linear/./assets/rc_case2.svg" alt="case2" style="width: 60%;" />
 </div>
 <h4 id="len--2"><a class="header" href="#len--2"><code>len &gt;= 2</code></a></h4>
 <div style="text-align: center;">

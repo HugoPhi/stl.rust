@@ -6,7 +6,6 @@
   color-scheme: var(--color-scheme);
 }
 
-/* font-family: "Open Sans", "SC"; */
 html {
   font-family: "Open Sans", "SC";
   color: var(--fg);

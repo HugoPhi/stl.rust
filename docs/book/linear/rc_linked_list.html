@@ -1,0 +1,563 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Rc Based Linked List - Data Structures in Rust by Hand</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Data Structures in Rust by Hand</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css">
+<h1 id="rc-based-linked-list"><a class="header" href="#rc-based-linked-list">Rc Based Linked List</a></h1>
+<p>链表，是一种离散内存分布的数据结构，各个节点之间通过一个指针相互链接，形成一个单向链表。其单个节点逻辑上包含两个部分：</p>
+<ul>
+<li>这个部分的数据(value)</li>
+<li>指向下一个数据的指针(next)</li>
+</ul>
+<p>如下图：</p>
+<p><img src="./assets/linked_list.svg" alt="" /></p>
+<p>尽管这在C，C++，python这样的语言里面十分容易实现，但是在Rust中，这似乎不是一件很简单的事情。</p>
+<h2 id="1-如何建立节点的数据结构"><a class="header" href="#1-如何建立节点的数据结构">1. 如何建立节点的数据结构</a></h2>
+<p>Rust是编译型语言。Rust在编译时需要知道数据结构的具体大小，因此所有的数据结构都要是固定的。然而对于链表这种递归的数据结构，其理论上的数据大小是无穷大。当然这是编译型语言都会犯难的问题。比如如下C代码：</p>
+<pre><code class="language-c">typedef struct LINKED_LIST {
+    int value;
+    struct LINKED_LIST next;
+} LinedList;
+</code></pre>
+<p>就是错误的，这时编译器会提示：</p>
+<blockquote>
+<p>Field has incomplete type 'struct LINKED_LIST'</p>
+</blockquote>
+<p>因为C语言也是编译型语言，需要在编译时确定大小，因此出现错误。解决方法也很简单：</p>
+<pre><code class="language-c">typedef struct LINKED_LIST {
+    int value;
+    struct LINKED_LIST *next;
+} LinedList;
+</code></pre>
+<p>只要把next声名成一个指针即可，这样相当于其大小就是固定的，这里一共是8B 。</p>
+<p>但是如果在python中，你可以这样：</p>
+<pre><code class="language-python">class LinkedList:
+    def __init__(self):
+        self.value = 0
+        self.next = None
+</code></pre>
+<p>来写，因为python是解释型语言，是动态语言，不需要在编译时确定大小，所以不会出错。</p>
+<p>但是，在Rust中呢？</p>
+<p>Rust既没有指针，也不是动态类型语言。但我们都知道，Rust使用一种所有权借用机制，那么我们很自然地会想到用如下写法：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>struct LinkedList&lt;T&gt; {
+    value: T,
+    next: &amp;mut LinkedList&lt;T&gt;,
+}
+<span class="boring">}</span></code></pre></pre>
+<p>不出意外你会收到如下报错：</p>
+<blockquote>
+<p>missing lifetime specifier expected named lifetime parameter</p>
+</blockquote>
+<p>这是因为Rust严格管控引用的生命周期，为了防止悬空引用，Rust在检查时必须保证被指向的部分的生命周期小于等于所有者的生命周期，即：</p>
+<p><span class="katex-display"><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8193em;vertical-align:-0.136em;"></span><span class="mord cjk_fallback">引用的生命周期</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord cjk_fallback">被引用者的生命周期</span></span></span></span></span></p>
+<p>而这里没有明确说明，因此我们必须显示声明出生命周期，如下所示：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>struct LinkedList&lt;'a, T&gt; {
+    value: T,
+    next: &amp;'a mut LinkedList&lt;'a, T&gt;,
+}
+<span class="boring">}</span></code></pre></pre>
+<p>目前编译器已经不报错了。那么是不是完成了？并不是，如果这时候你去初始化，你会发现你将无穷无尽地初始化下去，因为没有空的引用，所以next必须指向一个实例化的LinkedList 。
+如何解决这个问题？这时候只需要使用Option&lt;&gt;这个特殊的枚举类就可以了。具体我就不解释了，直接看代码：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>struct LinkedList&lt;'a, T&gt; {
+    value: T,
+    next: Option&lt;&amp;'a mut LinkedList&lt;'a, T&gt;&gt;,
+}
+<span class="boring">}</span></code></pre></pre>
+<p>这样我们就可以通过这样的方法来初始化一个链表节点：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>impl&lt;'a, T&gt; LinkedList&lt;'a, T&gt; {
+    fn new(val: T) -&gt; Self {
+        LinkedList {
+            value: val,
+            next: None,
+        }
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>但是这时我们离成功还有很远。这时我们来看一个例子：</p>
+<pre><pre class="playground"><code class="language-rust">#[derive(Debug)]
+struct LinkedList&lt;'a, T&gt; {
+    value: T,
+    next: Option&lt;&amp;'a mut LinkedList&lt;'a, T&gt;&gt;,
+}
+
+impl&lt;'a, T&gt; LinkedList&lt;'a, T&gt; {
+    fn new(val: T) -&gt; Self {
+        LinkedList {
+            value: val,
+            next: None,
+        }
+    }
+}
+
+
+fn main() {
+    let mut x = LinkedList::&lt;i32&gt;::new(3);
+    let mut binding = LinkedList::&lt;i32&gt;::new(4); // *
+    x.next = Some(&amp;mut binding); // *
+
+    println!("{:?}", x);
+}</code></pre></pre>
+<p>首先声明，这个例子是可以运行的。但是这里又一个奇怪的地方，那就是如果你直接在图中有<code>*</code>的地方使用：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>x.next = Some(&amp;mut LinkedList::&lt;i32&gt;::new(4));
+<span class="boring">}</span></code></pre></pre>
+<p>你就会发现编译器又报错了：</p>
+<blockquote>
+<p>temporary value dropped while borrowed creates a temporary value which is freed while still in use</p>
+</blockquote>
+<p>因为这个时候你的<code>LinkedList::&lt;i32&gt;::new(4)</code>是一个临时变量，而且你并未对他的所有者进行指派，所以在本行内它就会被释放，因此对他的可变借用的生命周期也是在本行内，然后根据我们之前的定义，x的生命周期应该小于这个可变借用，显然不符合规范，因此报错。
+所以我们要先把它指派给一个变量binding，这样它和x在同一作用域，生命周期相同，所以就不会报错了。</p>
+<p>从某种程度上来说，这算是一个解决办法，但是你会发现如果我们要创建一个长度为10的链表，那么我们需要中间变量10个！而且你还不能释放他们，因为如果他们被释放，那么他们其中之一的生命周期就会小于x，那么就不符合生命周期的检查。
+这显然不符合我们的预期，而且非常不符合实际，如果我们需要一个<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">20</span></span></span></span></span></span></span></span></span></span></span></span>个元素的链表，是不是要创建<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">20</span></span></span></span></span></span></span></span></span></span></span></span>个中间变量？</p>
+<blockquote>
+<h2 id="rust的安全性和开发负担"><a class="header" href="#rust的安全性和开发负担">Rust的安全性和开发负担</a></h2>
+<p>这正是Rust安全性带来的开发负担。如果在C语言中，你大可以不用关心，如果你足够自信你可以规避 <strong>“悬空引用”</strong> 和 <strong>“忘记释放带来的内存浪费”</strong>。事实上这还是十分难以避免的，毕竟人在编程的时候是很脆弱的(bushi)，我们举一个例子：</p>
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+typedef struct LINKED_LIST {
+    int value;
+    struct LINKED_LIST *next;
+} LinkedList;
+
+void foo1() {
+    LinkedList x = {0, NULL};
+
+    for (int i = 1; i &lt;= 5; ++i) {
+        LinkedList *y = (LinkedList *)malloc(sizeof(LinkedList));
+        y-&gt;value = i;
+        LinkedList *p = &amp;x;
+        while (p-&gt;next != NULL) {
+            p = p-&gt;next;
+        }
+
+        p-&gt;next = y;
+    }
+
+    LinkedList *p = &amp;x;
+    while (p != NULL) {
+        printf("%d -&gt; ", p-&gt;value);
+        p = p-&gt;next;
+    }
+
+    printf("ended\n");
+}  // you forget free the RAM of heap
+
+void foo2() {
+    LinkedList x = {0, NULL};
+
+    for (int i = 1; i &lt;= 5; ++i) {
+        LinkedList y = {i, NULL};
+        LinkedList *p = &amp;x;
+        while (p-&gt;next != NULL) {
+            p = p-&gt;next;
+        }
+
+        p-&gt;next = &amp;y;
+    }  // {i, NULL} released, x-&gt;next pointed to a invalid RAM
+
+    LinkedList *p = &amp;x;
+    while (p != NULL) {
+        printf("%d -&gt; ", p-&gt;value);
+        p = p-&gt;next;
+    }
+
+    printf("ended\n");
+}
+
+int main(int argc, char *argv[]) {
+    foo1();
+    return 0;
+}
+</code></pre>
+<p>这里<code>foo1</code>就是忘记释放内存，<code>foo2</code>就是悬空引用。</p>
+</blockquote>
+<p>事实上我们刚刚一直在做一件蠢事：把链表存储在栈内存上。在栈上，我们无法控制它的生命周期，无论在rust还是在C语言里。比如，如果我们把插入操作包装到函数里，等跳出函数，无论C还是Rust都会释放掉栈内存中的临时数据，这样无论如何都无法在函数弹栈之后保留我们的链表。</p>
+<p>因此救赎之道就在其中，我们需要申请堆内存。然而在Rust中，这个任务就交给智能指针了。这里我们选用了Rc&lt;RefCell&lt;&gt;&gt;作为智能指针，原因有两点：</p>
+<ul>
+<li>可以加入尾指针，方便高频的尾部插入操作</li>
+<li>可以方便地实现借用迭代器方法</li>
+</ul>
+<p>因此我们的数据结构就初具雏形了：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub struct LinkedListNode&lt;T&gt; {
+    value: T,
+    next: Option&lt;Rc&lt;RefCell&lt;LinkedListNode&lt;T&gt;&gt;&gt;&gt;,
+}
+<span class="boring">}</span></code></pre></pre>
+<p>除了这种写法之外，这里还有几种写法，各有优劣，大家自行考察：</p>
+<ol>
+<li>使用枚举，代替Option</li>
+</ol>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>enum LinkedListNode&lt;T&gt; {
+    Cons(val: T, next: Box&lt;LinkedListNode&lt;T&gt;&gt;),
+    Nil
+}
+<span class="boring">}</span></code></pre></pre>
+<ol start="2">
+<li>基于Box指针而不是Rc指针，节省开销</li>
+</ol>
+<p>这样就不会有尾指针。使得对尾部插入的操作时间复杂度上升。而且此时借用迭代器要另外实现一个迭代器类型，就是对头指针的引用。然后利用引用来不断访问值。</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>struct LinkedListNode&lt;T&gt; {
+    value: T,
+    next: Option&lt;Box&lt;LinkedListNode&lt;T&gt;&gt;&gt;,
+}
+<span class="boring">}</span></code></pre></pre>
+<p>此时借用迭代器就是：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>struct BorrowMutIterator&lt;'a, T&gt; {
+    curr: Option&lt;&amp;'a mut LinkedListNode&lt;T&gt;&gt;,
+}
+<span class="boring">}</span></code></pre></pre>
+<ol start="3">
+<li>基于NonNull指针，节省开销，但是要手动管理生命周期，不是很好，所以不推荐</li>
+</ol>
+<p>详细请参考<a href="https://github.com/TheAlgorithms/Rust/blob/master/src/data_structures/linked_list.rs">Rust Algorthm</a></p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub struct Node&lt;T&gt; {
+    pub val: T,
+    pub next: Option&lt;NonNull&lt;Node&lt;T&gt;&gt;&gt;,
+    prev: Option&lt;NonNull&lt;Node&lt;T&gt;&gt;&gt;,
+}
+<span class="boring">}</span></code></pre></pre>
+<h2 id="2-如何建立linkedlist的数据结构"><a class="header" href="#2-如何建立linkedlist的数据结构">2. 如何建立LinkedList的数据结构</a></h2>
+<p>事实上我们希望得到的是一个被封装好的，可以支持我们方便地进行增删改查以及获取各种数据信息比如长度的数据结构。因此我们需要一些额外字段来包装我们的裸链表节点。首先是需要一个头指针，指向真正的数据部分，这部分是必要的。然后为了增加尾部插入的效率，我们加入了<code>tail</code>指针，这样会免去查找到最后一个节点的步骤，从而把尾部插入的复杂度降到<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mord">1</span><span class="mclose">)</span></span></span></span>。以下是我们真正的<code>LinkedList&lt;T&gt;</code>的数据结构，以及各种操作的名称和复杂度的概览：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub struct LinkedList&lt;T&gt; {
+    len: usize,                                   // The length of the list.
+    head: Option&lt;Rc&lt;RefCell&lt;LinkedListNode&lt;T&gt;&gt;&gt;&gt;, // A reference to the first node in the list.
+    tail: Option&lt;Rc&lt;RefCell&lt;LinkedListNode&lt;T&gt;&gt;&gt;&gt;, // A reference to the last node in the list.
+}
+<span class="boring">}</span></code></pre></pre>
+<h3 id="21-各种操作"><a class="header" href="#21-各种操作">2.1. 各种操作</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>操作</th><th>函数名</th><th style="text-align: center">时间复杂度</th><th>返回值</th></tr></thead><tbody>
+<tr><td>头插</td><td>push_head</td><td style="text-align: center">O(1)</td><td>()</td></tr>
+<tr><td>尾插</td><td>push_back</td><td style="text-align: center">O(1)</td><td>()</td></tr>
+<tr><td>头删</td><td>pop_head</td><td style="text-align: center">O(1)</td><td>1. Ok(T) <br> 2. LinkedListError::EmptyList</td></tr>
+<tr><td>尾删</td><td>pop_back</td><td style="text-align: center">O(1)</td><td>1. Ok(T) <br> 2. LinkedListError::EmptyList</td></tr>
+<tr><td>插入</td><td>insert</td><td style="text-align: center">O(n)</td><td>1. Ok(()) <br> 2. LinkedListError::InsertOutOfRange</td></tr>
+<tr><td>删除</td><td>remove</td><td style="text-align: center">O(n)</td><td>1. Ok(T) <br> 2. LinkedListError::RemoveOutOfRange <br> 3. LinkedListError::RemoveFromEmptyList</td></tr>
+<tr><td>逆向查找</td><td>val2ix</td><td style="text-align: center">O(n)</td><td>Vec&lt;usize&gt;</td></tr>
+<tr><td>查找</td><td>ix2val &amp; get</td><td style="text-align: center">O(n)</td><td>Option&lt;T&gt;</td></tr>
+<tr><td>获取长度</td><td>len</td><td style="text-align: center">O(1)</td><td>self.len</td></tr>
+<tr><td>清除</td><td>clean</td><td style="text-align: center">O(n)</td><td>()</td></tr>
+<tr><td>获取迭代器</td><td>no_move_iter</td><td style="text-align: center">O(1)</td><td>LinkedListIterator&lt;T&gt;</td></tr>
+</tbody></table>
+</div>
+<h3 id="22-各种错误对应的情况"><a class="header" href="#22-各种错误对应的情况">2.2. 各种错误对应的情况</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>错误类型</th><th>对应情况</th></tr></thead><tbody>
+<tr><td><code>LinkedListError::EmptyList</code></td><td>当进行 <strong>pop_head</strong> 或 <strong>pop_back</strong> 操作时，若链表为空，则返回此错误。</td></tr>
+<tr><td><code>LinkedListError::InsertOutOfRange</code></td><td>当 <strong>insert</strong> 要插入元素的位置没有在<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">[</span><span class="mord">0</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.01968em;">l</span><span class="mord mathnormal">e</span><span class="mord mathnormal">n</span><span class="mclose">]</span></span></span></span>，返回此错误。</td></tr>
+<tr><td><code>LinkedListError::RemoveOutOfRange</code></td><td>当 <strong>remove</strong> 要删除的位置没在<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">[</span><span class="mord">0</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.01968em;">l</span><span class="mord mathnormal">e</span><span class="mord mathnormal">n</span><span class="mclose">)</span></span></span></span>，返回此错误。</td></tr>
+<tr><td><code>LinkedListError::RemoveFromEmptyList</code></td><td>当进行 <strong>remove</strong> 操作时，如果链表为空，则返回此错误。</td></tr>
+<tr><td><code>LinkedListError::NextIsNone</code></td><td>在进行链表遍历时，如果 <code>next</code> 指针为 <code>None</code>，则返回此错误，表示链表结束或发生其他错误。</td></tr>
+</tbody></table>
+</div>
+<h3 id="23-各种长度对应的链表的数据形态"><a class="header" href="#23-各种长度对应的链表的数据形态">2.3. 各种长度对应的链表的数据形态</a></h3>
+<h4 id="len--0"><a class="header" href="#len--0"><code>len == 0</code></a></h4>
+<div style="text-align: center;">
+    <img src="./assets/rc_case1.svg" alt="case1" style="width: 35%;" />
+</div>
+<h4 id="len--1"><a class="header" href="#len--1"><code>len == 1</code></a></h4>
+<div style="text-align: center;">
+    <img src="./assets/rc_case2.svg" alt="case2" style="width: 50%;" />
+</div>
+<h4 id="len--2"><a class="header" href="#len--2"><code>len &gt;= 2</code></a></h4>
+<div style="text-align: center;">
+    <img src="./assets/rc_case3.svg" alt="case3" style="width: 80%;" />
+</div>
+<h2 id="3-如何实现迭代器"><a class="header" href="#3-如何实现迭代器">3. 如何实现迭代器</a></h2>
+<p>迭代器和迭代修饰器是Rust里一大利器。他让我们很方便地取代循环操作。这里我们要自己实现一个关于LinkedListNode的迭代器，有两种制造函数的实现：</p>
+<ul>
+<li><code>into_iter()</code>，消耗所有权，通过实现IntoIterator的Trait。</li>
+<li><code>no_move_iter()</code>，借用，通过自定义函数iter实现。</li>
+</ul>
+<p>因为我们使用了可计数指针，因此我们就可以让我们的迭代器包含一个指向某个节点的指针。用这个指针来实现队节点的逐个访问，通过实现Iterator Trait来做这个事情。</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub struct LinkedListIterator&lt;T&gt; {
+    curr: Option&lt;Rc&lt;RefCell&lt;LinkedListNode&lt;T&gt;&gt;&gt;&gt;,
+}
+
+impl&lt;T&gt; LinkedListIterator&lt;T&gt; {
+    fn new(head: Option&lt;Rc&lt;RefCell&lt;LinkedListNode&lt;T&gt;&gt;&gt;&gt;) -&gt; Self {
+        LinkedListIterator { curr: head } // move ownership of head to curr
+    }
+}
+
+impl&lt;T: Clone&gt; Iterator for LinkedListIterator&lt;T&gt; {
+    type Item = T;
+
+    fn next(&amp;mut self) -&gt; Option&lt;Self::Item&gt; {
+        let curr = self.curr.clone();
+        if let Some(node) = curr {
+            let node_ref = node.borrow();
+            self.curr = node_ref.next.clone();
+            Some(node_ref.value.clone())
+        } else {
+            None
+        }
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<blockquote>
+<p><code>new()</code>函数中的注释说明我们移动了传入参数对数据的所有权，事实上你也可以传入引用，然后使用<code>Clone()</code>方法，但是这样做并不是一个明智的选择：</p>
+<ul>
+<li>首先，你需要类型<code>T</code>加入<code>Clone</code>特性约束。</li>
+<li>另外，这标明我们需要更多的开销。</li>
+</ul>
+</blockquote>
+<p>然后我们分别对两种不同的迭代器制造函数进行实现：</p>
+<h3 id="31-into_iter"><a class="header" href="#31-into_iter">3.1. <code>into_iter()</code></a></h3>
+<p>这里我们只需要实现<code>IntoIterator</code>的<code>into_iter()</code>方法，然后把所有权交给迭代器即可：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>impl&lt;T: Clone&gt; IntoIterator for LinkedList&lt;T&gt; {
+    type Item = T;
+    type IntoIter = LinkedListIterator&lt;T&gt;;
+
+    fn into_iter(self) -&gt; Self::IntoIter {
+        LinkedListIterator::new(self.head) // do not use self.head.clone here is to avoid rc::ref + 1
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>这里的注释的意思是：不要使用<code>self.head.clone()</code>，这样会增加引用计数，带来不必要的开销，因为<code>self.head</code>此时已经没有意义了。</p>
+<h3 id="32-no_move_iter"><a class="header" href="#32-no_move_iter">3.2. <code>no_move_iter()</code></a></h3>
+<p>我们在<code>impl&lt;T&gt; LinkedList&lt;T&gt;</code>的时候来做这个工作。它过于简单就不在这里详解了：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>impl&lt;T&gt; LinkedList&lt;T&gt;
+    pub fn no_move_iter(&amp;self) -&gt; LinkedListIterator&lt;T&gt; {
+        LinkedListIterator::new(self.head.clone()) // use clone to avoid move of self.head if you use Box&lt;&gt; impled LinkedList this is not able to complemented
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../linear/linear.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../linear/linear.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

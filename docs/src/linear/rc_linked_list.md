@@ -251,14 +251,6 @@ struct LinkedListNode<T> {
 }
 ```
 
-此时借用迭代器就是：
-
-```rust
-struct BorrowMutIterator<'a, T> {
-    curr: Option<&'a mut LinkedListNode<T>>,
-}
-```
-
 3. 基于NonNull指针，节省开销，但是要手动管理生命周期，不是很好，所以不推荐
 
 详细请参考[Rust Algorthm](https://github.com/TheAlgorithms/Rust/blob/master/src/data_structures/linked_list.rs)

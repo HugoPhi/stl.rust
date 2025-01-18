@@ -372,13 +372,6 @@ int main(int argc, char *argv[]) {
     next: Option&lt;Box&lt;LinkedListNode&lt;T&gt;&gt;&gt;,
 }
 <span class="boring">}</span></code></pre></pre>
-<p>此时借用迭代器就是：</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>struct BorrowMutIterator&lt;'a, T&gt; {
-    curr: Option&lt;&amp;'a mut LinkedListNode&lt;T&gt;&gt;,
-}
-<span class="boring">}</span></code></pre></pre>
 <ol start="3">
 <li>基于NonNull指针，节省开销，但是要手动管理生命周期，不是很好，所以不推荐</li>
 </ol>

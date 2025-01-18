@@ -166,7 +166,7 @@ where
     /// assert_eq!(list.len(), 0);
     /// ```
     pub fn new() -> Self {
-        LinkedList { len: 0, head: None }
+        Self::default()
     }
 
     /// Inserts a new node with the given value at the beginning of the list.
@@ -593,6 +593,26 @@ where
         self.len
     }
 
+    /// Checks if the list is empty.
+    ///
+    /// # Returns
+    ///
+    /// * `true` - If the list is empty.
+    /// * `false` - If the list is not empty.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use hym::box_linked_list::LinkedList;
+    ///
+    /// let mut list: LinkedList<i32> = LinkedList::new();
+    /// assert!(list.is_empty());
+    /// ```
+    ///
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
     /// Clears the list by removing all nodes.
     ///
     /// # Examples
@@ -612,6 +632,12 @@ where
     pub fn clean(&mut self) {
         self.head = None;
         self.len = 0;
+    }
+}
+
+impl<T> Default for LinkedList<T> {
+    fn default() -> Self {
+        LinkedList { len: 0, head: None }
     }
 }
 
@@ -977,5 +1003,13 @@ mod tests {
         let vec = it.collect::<Vec<i32>>();
 
         assert_eq!(vec, vec![1, 2, 3, 4, 5, 6]);
+    }
+
+    #[test]
+    fn test_is_empty() {
+        let mut list = LinkedList::new();
+        assert!(list.is_empty());
+        list.push_back(1);
+        assert!(!list.is_empty());
     }
 }

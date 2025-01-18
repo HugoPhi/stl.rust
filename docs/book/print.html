@@ -207,7 +207,7 @@
 </ul>
 </blockquote>
 <div class="table-wrapper"><table><thead><tr><th>数据结构</th><th>实现方式</th><th style="text-align: center">单元测试</th><th style="text-align: center">基准测试</th><th style="text-align: center">文档注释</th></tr></thead><tbody>
-<tr><td>🟡 Box链表</td><td>基于Box指针</td><td style="text-align: center">❌</td><td style="text-align: center">❌</td><td style="text-align: center">❌</td></tr>
+<tr><td>🟢 Box链表</td><td>基于Box指针</td><td style="text-align: center">✅</td><td style="text-align: center">✅</td><td style="text-align: center">✅</td></tr>
 <tr><td>🟢 Rc链表</td><td>基于Rc指针和RefCell指针</td><td style="text-align: center">✅</td><td style="text-align: center">✅</td><td style="text-align: center">✅</td></tr>
 <tr><td>🔴 NonNull链表</td><td>基于NonNull指针并自行管理生命周期</td><td style="text-align: center">❌</td><td style="text-align: center">❌</td><td style="text-align: center">❌</td></tr>
 <tr><td>🔴 双向链表</td><td>基于Box指针</td><td style="text-align: center">❌</td><td style="text-align: center">❌</td><td style="text-align: center">❌</td></tr>
@@ -471,13 +471,6 @@ int main(int argc, char *argv[]) {
 </span>struct LinkedListNode&lt;T&gt; {
     value: T,
     next: Option&lt;Box&lt;LinkedListNode&lt;T&gt;&gt;&gt;,
-}
-<span class="boring">}</span></code></pre></pre>
-<p>此时借用迭代器就是：</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>struct BorrowMutIterator&lt;'a, T&gt; {
-    curr: Option&lt;&amp;'a mut LinkedListNode&lt;T&gt;&gt;,
 }
 <span class="boring">}</span></code></pre></pre>
 <ol start="3">

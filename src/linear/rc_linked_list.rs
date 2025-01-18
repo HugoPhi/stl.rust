@@ -187,7 +187,7 @@ pub struct LinkedList<T> {
 /// - RemoveOutOfRange: A remove operation is out of range.
 /// - RemoveFromEmptyList: Trying to remove from an empty list.
 /// - RemoveWhileNextIsNone: The next node is `None`.
-/// 
+///
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum LinkedListError {
     EmptyList,             // Error when the list is empty.
@@ -216,11 +216,7 @@ where
     /// assert_eq!(format!("{}", list), "()");
     /// ```
     pub fn new() -> Self {
-        LinkedList {
-            len: 0,
-            head: None,
-            tail: None,
-        }
+        Self::default()
     }
 
     /// Adds a new node with the given value to the front (head) of the list.
@@ -695,6 +691,25 @@ where
         self.len
     }
 
+    /// Checks if the list is empty.
+    ///
+    /// # Returns
+    ///
+    /// * `true` - If the list is empty.
+    /// * `false` - If the list is not empty.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use hym::rc_linked_list::LinkedList;
+    ///
+    /// let mut list: LinkedList<i32> = LinkedList::new();
+    /// assert!(list.is_empty());
+    /// ```
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
     /// Clears the list by removing all nodes.
     ///
     /// # Examples
@@ -736,6 +751,16 @@ where
     /// ```
     pub fn no_move_iter(&self) -> LinkedListIterator<T> {
         LinkedListIterator::new(self.head.clone()) // use clone to avoid move of self.head if you use Box<> impled LinkedList this is not able to complemented
+    }
+}
+
+impl<T> Default for LinkedList<T> {
+    fn default() -> Self {
+        LinkedList {
+            len: 0,
+            head: None,
+            tail: None,
+        }
     }
 }
 
@@ -1110,5 +1135,13 @@ mod tests {
 
         assert_eq!(format!("{}", list), "(1 -> 2 -> 3 -> 4 -> 5 -> 6)");
         assert_eq!(vec, vec![1, 4, 9, 16, 25, 36]);
+    }
+
+    #[test]
+    fn test_is_empty() {
+        let mut list = LinkedList::new();
+        assert!(list.is_empty());
+        list.push_back(1);
+        assert!(!list.is_empty());
     }
 }

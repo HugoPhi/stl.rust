@@ -9,5 +9,7 @@ title = "Data Structures in Rust by Hand"
 theme = "theme"
 default-theme = "dark"
 preferred-dark-theme = "ayu"
+git-repository-url = "https://github.com/HugoPhi/stl.rust"
+git-repository-icon = "fa-github"
 
 [preprocessor.katex]

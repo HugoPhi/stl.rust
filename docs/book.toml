@@ -6,7 +6,8 @@ src = "src"
 title = "Data Structures in Rust by Hand"
 
 [output.html]
+theme = "theme"
 default-theme = "dark"
-preferred-dark-theme = "Ayu"
+preferred-dark-theme = "ayu"
 
 [preprocessor.katex]

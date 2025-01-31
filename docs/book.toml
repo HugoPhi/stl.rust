@@ -8,7 +8,7 @@ title = "Data Structures in Rust by Hand"
 [output.html]
 theme = "theme"
 default-theme = "light"
-preferred-dark-theme = "rust"
+preferred-light-theme = "rust"
 git-repository-url = "https://github.com/HugoPhi/stl.rust"
 git-repository-icon = "fa-github"
 

@@ -215,12 +215,34 @@ x.next = Some(&mut LinkedList::<i32>::new(4));
 
 事实上我们刚刚一直在做一件蠢事：把链表存储在栈内存上。在栈上，我们无法控制它的生命周期，无论在rust还是在C语言里。比如，如果我们把插入操作包装到函数里，等跳出函数，无论C还是Rust都会释放掉栈内存中的临时数据，这样无论如何都无法在函数弹栈之后保留我们的链表。
 
-因此救赎之道就在其中，我们需要申请堆内存。然而在Rust中，这个任务就交给智能指针了。这里我们选用了`Rc<RefCell<>>`作为智能指针，原因有两点：
+因此救赎之道就在其中，我们需要申请堆内存。在C语言中我们有malloc；C++中我们使用new；然而在Rust中，这个任务就交给智能指针了。这里对于智能指针的选择有如下几种，优劣如下：
 
-- 可以加入尾指针，方便高频的尾部插入操作
-- 可以方便地实现借用迭代器方法
+1. `Box<>`  
 
-因此我们的数据结构就初具雏形了：
+- 优势： 
+  - 相比于`Rc<RefCell<>>`非常轻量，在插入，删除的操作中比`Rc<RefCell<>>`表现好。
+- 劣势： 
+  - 无法引入尾指针，导致对尾部的插入复杂度变为$O(n)$。
+
+2. `Rc<RefCell<>>`
+
+- 优势： 
+  - 可以使用尾指针，因为`Rc`允许我们对同一块数据进行计数引用，而`RefCell`提供了对数据的更改权限。这使得我们可以高效地在尾部插入数据，可以提供更高效的链表队列。
+  - 可以在中间加入指针，提升查找效率一倍。
+- 劣势： 
+  - 由于其计数引用的设计增加了运行时的负担，导致它在普通操作的时候性能大打折扣。 
+
+3. `NonNull` (官方库的选择)
+
+- 优势： 
+  - 非常高效，是对于裸指针的一个非空包装，即保证安全，又具有效率。
+  - 解决了`Box<>`的问题，可以实现$O(1)$级的尾插。
+- 劣势： 
+  - 需要显式管理生命周期，实现困难。
+  - 需要管理裸指针，包含`unsafe`的部分，安全性不如前两者。
+
+
+在此处，我们选择`Rc<RefCell<>>`，至此我们的数据结构就初具雏形了：
 
 ```rust
 pub struct LinkedListNode<T> {
@@ -229,7 +251,7 @@ pub struct LinkedListNode<T> {
 }
 ```
 
-除了这种写法之外，这里还有几种写法，各有优劣，大家自行考察：
+除了这种写法之外，这里还有几种常见的写法，各有优劣，大家自行考察：
 
 1. 使用枚举，代替Option
 
@@ -240,9 +262,9 @@ enum LinkedListNode<T> {
 }
 ```
 
-2. 基于Box指针而不是Rc指针，节省开销
+2. 基于Box指针而不是Rc指针，节省开销([boxed version](./box_linked_list.md))
 
-这样就不会有尾指针。使得对尾部插入的操作时间复杂度上升。而且此时借用迭代器要另外实现一个迭代器类型，就是对头指针的引用。然后利用引用来不断访问值。
+这样就不会有尾指针，使得对尾部插入的操作时间复杂度上升。
 
 ```rust
 struct LinkedListNode<T> {
@@ -253,13 +275,12 @@ struct LinkedListNode<T> {
 
 3. 基于NonNull指针，节省开销，但是要手动管理生命周期，不是很好，所以不推荐
 
-详细请参考[Rust Algorthm](https://github.com/TheAlgorithms/Rust/blob/master/src/data_structures/linked_list.rs)
+详细请参考[Rust Algorthm](https://github.com/TheAlgorithms/Rust/blob/master/src/data_structures/linked_list.rs).
 
 ```rust
-pub struct Node<T> {
-    pub val: T,
-    pub next: Option<NonNull<Node<T>>>,
-    prev: Option<NonNull<Node<T>>>,
+pub struct LinkedListNode<T> {
+    val: T,
+    next: Option<NonNull<Node<T>>>,
 }
 ```
 
@@ -270,8 +291,8 @@ pub struct Node<T> {
 ```rust
 pub struct LinkedList<T> {
     len: usize,                                   // The length of the list.
-    head: Option<Rc<RefCell<LinkedListNode<T>>>>, // A reference to the first node in the list.
-    tail: Option<Rc<RefCell<LinkedListNode<T>>>>, // A reference to the last node in the list.
+    head: Option<Rc<RefCell<LinkedListNode<T>>>>, // An Optioned rc reference to the first node in the list.
+    tail: Option<Rc<RefCell<LinkedListNode<T>>>>, // An Optioned rc reference to the last node in the list.
 }
 ```
 
@@ -289,7 +310,7 @@ pub struct LinkedList<T> {
 | 查找 | ix2val & get | O(n) | Option\<T> |
 | 获取长度 | len | O(1) | self.len |
 | 清除 | clean | O(n) | () |
-| 获取迭代器 | no_move_iter | O(1) | LinkedListIterator\<T> |
+| 获取不移交所有权的迭代器 | no_move_into_iter | O(1) | LinkedListIterator\<T> |
 
 ### 2.2. 各种错误对应的情况
 
@@ -321,15 +342,17 @@ pub struct LinkedList<T> {
     <img src="./assets/rc_case3.svg" alt="case3" style="width: 80%;" />
 </div>
 
-### 2.4. 一些在实现中比较棘手的问题
+### 2.4. 数据操作 
 
-#### # 我们应该避免什么操作？
+在这里，我们将`Rc<RefCell<>>`指针所指向的内存称为“数据”
 
-#### # `Rc<RefCell<LinkedListNode<T>>>`如何获取数据的各个部分的各种形式。
+#### # 
+
+
 
 ## 3. 如何实现迭代器
 
-迭代器和迭代修饰器是Rust里一大利器。他让我们很方便地取代循环操作。这里我们要自己实现一个关于LinkedListNode的迭代器，有两种制造函数的实现：
+迭代器和迭代修饰器是Rust里一大利器。他让我们很方便地取代循环操作。
 
 - `into_iter()`，消耗所有权，通过实现IntoIterator的Trait。
 - `no_move_iter()`，借用，通过自定义函数iter实现。
@@ -385,7 +408,7 @@ impl<T: Clone> IntoIterator for LinkedList<T> {
 }
 ```
 
-这里的注释的意思是：不要使用`self.head.clone()`，这样会增加引用计数，带来不必要的开销，因为`self.head`此时已经没有意义了。
+这里的注释的意思是：不要使用`self.head.clone()`，这样会增加引用计数，带来不必要的开销，因为`self.head`此时已经不再被需要了。
 
 ### 3.2. `no_move_iter()`
 

@@ -12,3 +12,10 @@ criterion = { version = "0.4", features = ["html_reports"] }
 [[bench]]
 name = "linked_list_bench"
 harness = false
+
+
+[features]
+default = ["box_linked_list"]
+box_linked_list = []
+rc_linked_list = []
+nonull_linked_list = []

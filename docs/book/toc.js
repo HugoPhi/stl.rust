@@ -8,9 +8,9 @@ class MDBookSidebarScrollbox extends HTMLElement {
         super();
     }
     connectedCallback() {
-        this.innerHTML = '<ol class="chapter"><li class="chapter-item expanded affix "><a href="page.html">Data Structures by Hand</a></li><li class="chapter-item expanded affix "><li class="spacer"></li><li class="chapter-item expanded affix "><a href="0.html">✨ Introduction</a></li><li class="chapter-item expanded "><a href="linear/linear.html"><strong aria-hidden="true">1.</strong> Lineared Structures</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="linear/rc_linked_list.html"><strong aria-hidden="true">1.1.</strong> Rc Based Linked List</a></li></ol></li></ol>';
+        this.innerHTML = '<ol class="chapter"><li class="chapter-item expanded affix "><a href="page.html">Data Structures by Hand</a></li><li class="chapter-item expanded affix "><li class="spacer"></li><li class="chapter-item expanded affix "><a href="0.html">✨ Introduction</a></li><li class="chapter-item expanded "><a href="linear/linear.html"><strong aria-hidden="true">1.</strong> Lineared Structures</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="linear/rc_linked_list.html"><strong aria-hidden="true">1.1.</strong> Rc Based Linked List</a></li><li class="chapter-item expanded "><a href="linear/box_linked_list.html"><strong aria-hidden="true">1.2.</strong> Box Based Linked List</a></li></ol></li></ol>';
         // Set the current, active page, and reveal it if it's hidden
-        let current_page = document.location.href.toString();
+        let current_page = document.location.href.toString().split("#")[0];
         if (current_page.endsWith("/")) {
             current_page += "index.html";
         }

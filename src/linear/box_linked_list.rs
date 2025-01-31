@@ -633,6 +633,57 @@ where
         self.head = None;
         self.len = 0;
     }
+
+    /// Returns an iterator over the values in the list.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use hym::box_linked_list::LinkedList;
+    /// let list: LinkedList<i32> = LinkedList::from_iter(vec![1, 2, 3, 4, 5]);
+    /// let mut iter = list.iter(); // create an borrowed iterator for linked list
+    ///
+    /// assert_eq!(iter.next(), Some(&1));
+    /// assert_eq!(iter.next(), Some(&2));
+    /// assert_eq!(iter.next(), Some(&3));
+    /// assert_eq!(iter.next(), Some(&4));
+    /// assert_eq!(iter.next(), Some(&5));
+    /// assert_eq!(iter.next(), None);
+    /// ```
+    pub fn iter(&self) -> LinkedListBorrowIterator<T> {
+        LinkedListBorrowIterator::new(self.head.as_ref())
+    }
+
+    /// Returns a mutable iterator over the values in the list.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use hym::box_linked_list::LinkedList;
+    /// let mut list: LinkedList<i32> = LinkedList::from_iter(vec![1, 2, 3, 4, 5]);
+    /// let mut iter = list.iter_mut(); // create a mutable borrowed iterator for linked list
+    ///
+    /// assert_eq!(iter.next(), Some(&mut 1));
+    /// assert_eq!(iter.next(), Some(&mut 2));
+    /// assert_eq!(iter.next(), Some(&mut 3));
+    /// assert_eq!(iter.next(), Some(&mut 4));
+    /// assert_eq!(iter.next(), Some(&mut 5));
+    /// assert_eq!(iter.next(), None);
+    /// ```
+    ///
+    /// ```rust
+    /// use hym::box_linked_list::LinkedList;
+    /// let mut list: LinkedList<i32> = LinkedList::from_iter(vec![1, 2, 3, 4, 5]);
+    ///
+    /// for val in list.iter_mut() {
+    ///     *val *= *val;
+    /// }
+    ///
+    /// assert_eq!(format!("{}", list), "(1 -> 4 -> 9 -> 16 -> 25)");
+    /// ```
+    pub fn iter_mut(&mut self) -> LinkedListBorrowMutIterator<T> {
+        LinkedListBorrowMutIterator::new(self.head.as_mut())
+    }
 }
 
 impl<T> Default for LinkedList<T> {
@@ -708,6 +759,54 @@ impl<T> Iterator for LinkedListIterator<T> {
         if let Some(node) = self.current.take() {
             self.current = node.next;
             Some(node.value)
+        } else {
+            None
+        }
+    }
+}
+
+/// Borrow iterators for LinkedList<T>
+pub struct LinkedListBorrowIterator<'a, T> {
+    current: Option<&'a Box<LinkedListNode<T>>>,
+}
+
+impl<'a, T> LinkedListBorrowIterator<'a, T> {
+    pub fn new(head: Option<&'a Box<LinkedListNode<T>>>) -> LinkedListBorrowIterator<'a, T> {
+        LinkedListBorrowIterator { current: head }
+    }
+}
+
+impl<'a, T> Iterator for LinkedListBorrowIterator<'a, T> {
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some(node) = self.current.take() {
+            self.current = node.next.as_ref();
+            Some(&node.value)
+        } else {
+            None
+        }
+    }
+}
+
+/// Borrow Mut iter for LinkedList<T>
+pub struct LinkedListBorrowMutIterator<'a, T> {
+    current: Option<&'a mut Box<LinkedListNode<T>>>,
+}
+
+impl<'a, T> LinkedListBorrowMutIterator<'a, T> {
+    pub fn new(head: Option<&'a mut Box<LinkedListNode<T>>>) -> LinkedListBorrowMutIterator<'a, T> {
+        LinkedListBorrowMutIterator { current: head }
+    }
+}
+
+impl<'a, T> Iterator for LinkedListBorrowMutIterator<'a, T> {
+    type Item = &'a mut T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some(node) = self.current.take() {
+            self.current = node.next.as_mut();
+            Some(&mut node.value)
         } else {
             None
         }
@@ -1011,5 +1110,37 @@ mod tests {
         assert!(list.is_empty());
         list.push_back(1);
         assert!(!list.is_empty());
+    }
+
+    #[test]
+    fn test_iter() {
+        let list: LinkedList<i32> = LinkedList::from_iter(vec![1, 2, 3, 4, 5]);
+        let mut iter = list.iter(); // create an borrowed iterator for linked list
+
+        assert_eq!(iter.next(), Some(&1));
+        assert_eq!(iter.next(), Some(&2));
+        assert_eq!(iter.next(), Some(&3));
+        assert_eq!(iter.next(), Some(&4));
+        assert_eq!(iter.next(), Some(&5));
+        assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn test_iter_mut() {
+        let mut list: LinkedList<i32> = LinkedList::from_iter(vec![1, 2, 3, 4, 5]);
+        let mut iter = list.iter_mut(); // create a mutable borrowed iterator for linked list
+
+        assert_eq!(iter.next(), Some(&mut 1));
+        assert_eq!(iter.next(), Some(&mut 2));
+        assert_eq!(iter.next(), Some(&mut 3));
+        assert_eq!(iter.next(), Some(&mut 4));
+        assert_eq!(iter.next(), Some(&mut 5));
+        assert_eq!(iter.next(), None);
+
+        for val in list.iter_mut() {
+            *val *= *val;
+        }
+
+        assert_eq!(format!("{}", list), "(1 -> 4 -> 9 -> 16 -> 25)");
     }
 }

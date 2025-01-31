@@ -743,13 +743,13 @@ where
     /// use hym::rc_linked_list::LinkedList;
     ///
     /// let list: LinkedList<i32> = LinkedList::from_iter(vec![1, 2, 3, 4, 5, 6]);
-    /// let it = list.no_move_iter().map(|x| x * x);
+    /// let it = list.no_move_into_iter().map(|x| x * x);
     /// let vec = it.collect::<Vec<_>>();
     ///
     /// assert_eq!(format!("{}", list), "(1 -> 2 -> 3 -> 4 -> 5 -> 6)");
     /// assert_eq!(vec, vec![1, 4, 9, 16, 25, 36]);
     /// ```
-    pub fn no_move_iter(&self) -> LinkedListIterator<T> {
+    pub fn no_move_into_iter(&self) -> LinkedListIterator<T> {
         LinkedListIterator::new(self.head.clone()) // use clone to avoid move of self.head if you use Box<> impled LinkedList this is not able to complemented
     }
 }
@@ -1129,7 +1129,7 @@ mod tests {
     fn test_iter() {
         let list: LinkedList<i32> = LinkedList::from_iter(vec![1, 2, 3, 4, 5, 6]);
 
-        let it = list.no_move_iter().map(|x| x * x);
+        let it = list.no_move_into_iter().map(|x| x * x);
 
         let vec = it.collect::<Vec<_>>();
 

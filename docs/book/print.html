@@ -35,7 +35,7 @@
         <!-- Provide site root to javascript -->
         <script>
             var path_to_root = "";
-            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "rust" : "light";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc.js"></script>
@@ -438,12 +438,56 @@ int main(int argc, char *argv[]) {
 <p>这里<code>foo1</code>就是忘记释放内存，<code>foo2</code>就是悬空引用。</p>
 </blockquote>
 <p>事实上我们刚刚一直在做一件蠢事：把链表存储在栈内存上。在栈上，我们无法控制它的生命周期，无论在rust还是在C语言里。比如，如果我们把插入操作包装到函数里，等跳出函数，无论C还是Rust都会释放掉栈内存中的临时数据，这样无论如何都无法在函数弹栈之后保留我们的链表。</p>
-<p>因此救赎之道就在其中，我们需要申请堆内存。然而在Rust中，这个任务就交给智能指针了。这里我们选用了<code>Rc&lt;RefCell&lt;&gt;&gt;</code>作为智能指针，原因有两点：</p>
+<p>因此救赎之道就在其中，我们需要申请堆内存。在C语言中我们有malloc；C++中我们使用new；然而在Rust中，这个任务就交给智能指针了。这里对于智能指针的选择有如下几种，优劣如下：</p>
+<ol>
+<li><code>Box&lt;&gt;</code></li>
+</ol>
 <ul>
-<li>可以加入尾指针，方便高频的尾部插入操作</li>
-<li>可以方便地实现借用迭代器方法</li>
+<li>优势：
+<ul>
+<li>相比于<code>Rc&lt;RefCell&lt;&gt;&gt;</code>非常轻量，在插入，删除的操作中比<code>Rc&lt;RefCell&lt;&gt;&gt;</code>表现好。</li>
 </ul>
-<p>因此我们的数据结构就初具雏形了：</p>
+</li>
+<li>劣势：
+<ul>
+<li>无法引入尾指针，导致对尾部的插入复杂度变为<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mord mathnormal">n</span><span class="mclose">)</span></span></span></span>。</li>
+</ul>
+</li>
+</ul>
+<ol start="2">
+<li><code>Rc&lt;RefCell&lt;&gt;&gt;</code></li>
+</ol>
+<ul>
+<li>优势：
+<ul>
+<li>可以使用尾指针，因为<code>Rc</code>允许我们对同一块数据进行计数引用，而<code>RefCell</code>提供了对数据的更改权限。这使得我们可以高效地在尾部插入数据，可以提供更高效的链表队列。</li>
+<li>可以在中间加入指针，提升查找效率一倍。</li>
+</ul>
+</li>
+<li>劣势：
+<ul>
+<li>由于其计数引用的设计增加了运行时的负担，导致它在普通操作的时候性能大打折扣。</li>
+</ul>
+</li>
+</ul>
+<ol start="3">
+<li><code>NonNull</code> (官方库的选择)</li>
+</ol>
+<ul>
+<li>优势：
+<ul>
+<li>非常高效，是对于裸指针的一个非空包装，即保证安全，又具有效率。</li>
+<li>解决了<code>Box&lt;&gt;</code>的问题，可以实现<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mord">1</span><span class="mclose">)</span></span></span></span>级的尾插。</li>
+</ul>
+</li>
+<li>劣势：
+<ul>
+<li>需要显式管理生命周期，实现困难。</li>
+<li>需要管理裸指针，包含<code>unsafe</code>的部分，安全性不如前两者。</li>
+</ul>
+</li>
+</ul>
+<p>在此处，我们选择<code>Rc&lt;RefCell&lt;&gt;&gt;</code>，至此我们的数据结构就初具雏形了：</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct LinkedListNode&lt;T&gt; {
@@ -451,7 +495,7 @@ int main(int argc, char *argv[]) {
     next: Option&lt;Rc&lt;RefCell&lt;LinkedListNode&lt;T&gt;&gt;&gt;&gt;,
 }
 <span class="boring">}</span></code></pre></pre>
-<p>除了这种写法之外，这里还有几种写法，各有优劣，大家自行考察：</p>
+<p>除了这种写法之外，这里还有几种常见的写法，各有优劣，大家自行考察：</p>
 <ol>
 <li>使用枚举，代替Option</li>
 </ol>
@@ -463,9 +507,9 @@ int main(int argc, char *argv[]) {
 }
 <span class="boring">}</span></code></pre></pre>
 <ol start="2">
-<li>基于Box指针而不是Rc指针，节省开销</li>
+<li>基于Box指针而不是Rc指针，节省开销(<a href="linear/./box_linked_list.html">boxed version</a>)</li>
 </ol>
-<p>这样就不会有尾指针。使得对尾部插入的操作时间复杂度上升。而且此时借用迭代器要另外实现一个迭代器类型，就是对头指针的引用。然后利用引用来不断访问值。</p>
+<p>这样就不会有尾指针，使得对尾部插入的操作时间复杂度上升。</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>struct LinkedListNode&lt;T&gt; {
@@ -476,13 +520,12 @@ int main(int argc, char *argv[]) {
 <ol start="3">
 <li>基于NonNull指针，节省开销，但是要手动管理生命周期，不是很好，所以不推荐</li>
 </ol>
-<p>详细请参考<a href="https://github.com/TheAlgorithms/Rust/blob/master/src/data_structures/linked_list.rs">Rust Algorthm</a></p>
+<p>详细请参考<a href="https://github.com/TheAlgorithms/Rust/blob/master/src/data_structures/linked_list.rs">Rust Algorthm</a>.</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>pub struct Node&lt;T&gt; {
-    pub val: T,
-    pub next: Option&lt;NonNull&lt;Node&lt;T&gt;&gt;&gt;,
-    prev: Option&lt;NonNull&lt;Node&lt;T&gt;&gt;&gt;,
+</span>pub struct LinkedListNode&lt;T&gt; {
+    val: T,
+    next: Option&lt;NonNull&lt;Node&lt;T&gt;&gt;&gt;,
 }
 <span class="boring">}</span></code></pre></pre>
 <h2 id="2-如何建立linkedlist的数据结构"><a class="header" href="#2-如何建立linkedlist的数据结构">2. 如何建立LinkedList的数据结构</a></h2>
@@ -491,8 +534,8 @@ int main(int argc, char *argv[]) {
 </span><span class="boring">fn main() {
 </span>pub struct LinkedList&lt;T&gt; {
     len: usize,                                   // The length of the list.
-    head: Option&lt;Rc&lt;RefCell&lt;LinkedListNode&lt;T&gt;&gt;&gt;&gt;, // A reference to the first node in the list.
-    tail: Option&lt;Rc&lt;RefCell&lt;LinkedListNode&lt;T&gt;&gt;&gt;&gt;, // A reference to the last node in the list.
+    head: Option&lt;Rc&lt;RefCell&lt;LinkedListNode&lt;T&gt;&gt;&gt;&gt;, // An Optioned rc reference to the first node in the list.
+    tail: Option&lt;Rc&lt;RefCell&lt;LinkedListNode&lt;T&gt;&gt;&gt;&gt;, // An Optioned rc reference to the last node in the list.
 }
 <span class="boring">}</span></code></pre></pre>
 <h3 id="21-各种操作"><a class="header" href="#21-各种操作">2.1. 各种操作</a></h3>
@@ -507,7 +550,7 @@ int main(int argc, char *argv[]) {
 <tr><td>查找</td><td>ix2val &amp; get</td><td style="text-align: center">O(n)</td><td>Option&lt;T&gt;</td></tr>
 <tr><td>获取长度</td><td>len</td><td style="text-align: center">O(1)</td><td>self.len</td></tr>
 <tr><td>清除</td><td>clean</td><td style="text-align: center">O(n)</td><td>()</td></tr>
-<tr><td>获取迭代器</td><td>no_move_iter</td><td style="text-align: center">O(1)</td><td>LinkedListIterator&lt;T&gt;</td></tr>
+<tr><td>获取不移交所有权的迭代器</td><td>no_move_into_iter</td><td style="text-align: center">O(1)</td><td>LinkedListIterator&lt;T&gt;</td></tr>
 </tbody></table>
 </div>
 <h3 id="22-各种错误对应的情况"><a class="header" href="#22-各种错误对应的情况">2.2. 各种错误对应的情况</a></h3>
@@ -532,11 +575,11 @@ int main(int argc, char *argv[]) {
 <div style="text-align: center;">
     <img src="linear/./assets/rc_case3.svg" alt="case3" style="width: 80%;" />
 </div>
-<h3 id="24-一些在实现中比较棘手的问题"><a class="header" href="#24-一些在实现中比较棘手的问题">2.4. 一些在实现中比较棘手的问题</a></h3>
-<h4 id="我们应该避免什么操作"><a class="header" href="#我们应该避免什么操作"># 我们应该避免什么操作？</a></h4>
-<h4 id="rcrefcelllinkedlistnodet如何获取数据的各个部分的各种形式"><a class="header" href="#rcrefcelllinkedlistnodet如何获取数据的各个部分的各种形式"># <code>Rc&lt;RefCell&lt;LinkedListNode&lt;T&gt;&gt;&gt;</code>如何获取数据的各个部分的各种形式。</a></h4>
+<h3 id="24-数据操作"><a class="header" href="#24-数据操作">2.4. 数据操作</a></h3>
+<p>在这里，我们将<code>Rc&lt;RefCell&lt;&gt;&gt;</code>指针所指向的内存称为“数据”</p>
+<h4 id=""><a class="header" href="#"></a></h4>
 <h2 id="3-如何实现迭代器"><a class="header" href="#3-如何实现迭代器">3. 如何实现迭代器</a></h2>
-<p>迭代器和迭代修饰器是Rust里一大利器。他让我们很方便地取代循环操作。这里我们要自己实现一个关于LinkedListNode的迭代器，有两种制造函数的实现：</p>
+<p>迭代器和迭代修饰器是Rust里一大利器。他让我们很方便地取代循环操作。</p>
 <ul>
 <li><code>into_iter()</code>，消耗所有权，通过实现IntoIterator的Trait。</li>
 <li><code>no_move_iter()</code>，借用，通过自定义函数iter实现。</li>
@@ -590,7 +633,7 @@ impl&lt;T: Clone&gt; Iterator for LinkedListIterator&lt;T&gt; {
     }
 }
 <span class="boring">}</span></code></pre></pre>
-<p>这里的注释的意思是：不要使用<code>self.head.clone()</code>，这样会增加引用计数，带来不必要的开销，因为<code>self.head</code>此时已经没有意义了。</p>
+<p>这里的注释的意思是：不要使用<code>self.head.clone()</code>，这样会增加引用计数，带来不必要的开销，因为<code>self.head</code>此时已经不再被需要了。</p>
 <h3 id="32-no_move_iter"><a class="header" href="#32-no_move_iter">3.2. <code>no_move_iter()</code></a></h3>
 <p>我们在<code>impl&lt;T&gt; LinkedList&lt;T&gt;</code>的时候来做这个工作。它过于简单就不在这里详解了：</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -601,6 +644,8 @@ impl&lt;T: Clone&gt; Iterator for LinkedListIterator&lt;T&gt; {
     }
 }
 <span class="boring">}</span></code></pre></pre>
+<div style="break-before: page; page-break-before: always;"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css">
+<h1 id="box-based-linked-list"><a class="header" href="#box-based-linked-list">Box Based Linked List</a></h1>
 
                     </main>
 

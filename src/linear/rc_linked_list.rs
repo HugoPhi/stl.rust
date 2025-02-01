@@ -1,5 +1,5 @@
 use std::fmt;
-use std::{cell::RefCell, ops::Deref, rc::Rc};
+use std::{cell::RefCell, rc::Rc};
 
 /// `LinkedListNode` represents a single node in a linked list containing a value and a reference to the next node.
 #[derive(Debug, Clone)]
@@ -112,7 +112,8 @@ where
         } else {
             let next_ptr = self.next.take().unwrap();
             self.next = next_ptr.borrow_mut().next.take();
-            Ok(next_ptr.deref().clone().into_inner().value)
+            let x = next_ptr.borrow().value.clone();
+            Ok(x)
         }
     }
 }
@@ -458,13 +459,15 @@ where
             self.push_head(val);
             Ok(())
         } else if (0 < at) && (at < self.len + 1) {
-            let mut curr = self.head.as_ref().unwrap().clone();
+            let mut wraped_ptr = self.head.clone();
             for _ in 0..at - 1 {
-                let node = curr.borrow().next.as_ref().unwrap().clone();
-                curr = node;
+                let x = wraped_ptr.as_ref().unwrap().borrow().next.clone();
+                wraped_ptr = x;
             }
-            curr.borrow_mut().insert(val);
+
+            wraped_ptr.as_ref().unwrap().borrow_mut().insert(val);
             self.len += 1;
+
             Ok(())
         } else {
             Err(LinkedListError::InsertOutOfRange)

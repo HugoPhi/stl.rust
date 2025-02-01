@@ -275,7 +275,7 @@
 </code></pre>
 <p>就是错误的，这时编译器会提示：</p>
 <blockquote>
-<p>Field has incomplete type 'struct LINKED_LIST'</p>
+<p>❌ Error: Field has incomplete type 'struct LINKED_LIST'</p>
 </blockquote>
 <p>因为C语言也是编译型语言，需要在编译时确定大小，因此出现错误。解决方法也很简单：</p>
 <pre><code class="language-c">typedef struct LINKED_LIST {
@@ -302,7 +302,7 @@
 <span class="boring">}</span></code></pre></pre>
 <p>不出意外你会收到如下报错：</p>
 <blockquote>
-<p>missing lifetime specifier expected named lifetime parameter</p>
+<p>❌ Error: missing lifetime specifier expected named lifetime parameter</p>
 </blockquote>
 <p>这是因为Rust严格管控引用的生命周期，为了防止悬空引用，Rust在检查时必须保证被指向的部分的生命周期小于等于所有者的生命周期，即：</p>
 <blockquote>
@@ -368,14 +368,14 @@ fn main() {
 <span class="boring">}</span></code></pre></pre>
 <p>你就会发现编译器又报错了：</p>
 <blockquote>
-<p>temporary value dropped while borrowed creates a temporary value which is freed while still in use</p>
+<p>❌ Error: temporary value dropped while borrowed creates a temporary value which is freed while still in use</p>
 </blockquote>
 <p>因为这个时候你的<code>LinkedList::&lt;i32&gt;::new(4)</code>是一个临时变量，而且你并未对他的所有者进行指派，所以在本行内它就会被释放，因此对他的可变借用的生命周期也是在本行内，然后根据我们之前的定义，<code>x</code>的生命周期应该小于这个可变借用，显然不符合规范，因此报错。
 所以我们要先把它指派给一个变量binding，这样它和x在同一作用域，生命周期相同，所以就不会报错了。</p>
 <p>从某种程度上来说，这算是一个解决办法，但是你会发现如果我们要创建一个长度为10的链表，那么我们需要中间变量10个！而且你还不能释放他们，因为如果他们被释放，那么他们其中之一的生命周期就会小于<code>x</code>，那么就不符合生命周期的检查。
 这显然不符合我们的预期，而且非常不符合实际，如果我们需要一个<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">20</span></span></span></span></span></span></span></span></span></span></span></span>个元素的链表，是不是要创建<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">20</span></span></span></span></span></span></span></span></span></span></span></span>个中间变量？</p>
 <blockquote>
-<h2 id="rust的安全性和开发负担"><a class="header" href="#rust的安全性和开发负担">Rust的安全性和开发负担</a></h2>
+<h2 id="-rust的安全性和开发负担"><a class="header" href="#-rust的安全性和开发负担">✨ Rust的安全性和开发负担</a></h2>
 <p>这正是Rust安全性带来的开发负担。如果在C语言中，你大可以不用关心，如果你足够自信你可以规避 <strong>“悬空引用”</strong> 和 <strong>“忘记释放带来的内存浪费”</strong>。事实上这还是十分难以避免的，毕竟人在编程的时候是很脆弱的(bushi)，我们举一个例子：</p>
 <pre><code class="language-c">#include &lt;stdio.h&gt;
 #include &lt;stdlib.h&gt;
@@ -462,6 +462,7 @@ int main(int argc, char *argv[]) {
 <ul>
 <li>可以使用尾指针，因为<code>Rc</code>允许我们对同一块数据进行计数引用，而<code>RefCell</code>提供了对数据的更改权限。这使得我们可以高效地在尾部插入数据，可以提供更高效的链表队列。</li>
 <li>可以在中间加入指针，提升查找效率一倍。</li>
+<li>可以实现获取原链表所有权的迭代器，而不会消耗原链表的所有权，这是<code>Rc</code>指针的特性。</li>
 </ul>
 </li>
 <li>劣势：
@@ -576,76 +577,93 @@ int main(int argc, char *argv[]) {
     <img src="linear/./assets/rc_case3.svg" alt="case3" style="width: 80%;" />
 </div>
 <h3 id="24-数据操作"><a class="header" href="#24-数据操作">2.4. 数据操作</a></h3>
-<p>在这里，我们将<code>Rc&lt;RefCell&lt;&gt;&gt;</code>指针所指向的内存称为“数据”</p>
-<h4 id=""><a class="header" href="#"></a></h4>
-<h2 id="3-如何实现迭代器"><a class="header" href="#3-如何实现迭代器">3. 如何实现迭代器</a></h2>
-<p>迭代器和迭代修饰器是Rust里一大利器。他让我们很方便地取代循环操作。</p>
-<ul>
-<li><code>into_iter()</code>，消耗所有权，通过实现IntoIterator的Trait。</li>
-<li><code>no_move_iter()</code>，借用，通过自定义函数iter实现。</li>
-</ul>
-<p>因为我们使用了可计数指针，因此我们就可以让我们的迭代器包含一个指向某个节点的指针。用这个指针来实现队节点的逐个访问，通过实现Iterator Trait来做这个事情。</p>
+<p>在这里，我们将<code>Rc&lt;RefCell&lt;&gt;&gt;</code>指针所指向的内存称为“数据”。这里我们的指针类型是<code>Option&lt;Rc&lt;RefCell&lt;LinkedListNode&lt;T&gt;&gt;&gt;&gt;</code>，因而如果我们想要进行一些例如获取<code>next</code>，修改<code>value</code>的操作等，就要从这个“层层包装”的数据结构中解构并做我们想做的事情；而且不得不说对于<code>Rc</code>的操作是比较麻烦的，因为这时的所有权并不只是转移，还会增加，出现多个所有者的情况。以下是一些常见的操作：</p>
+<h4 id="获取节点的属性值"><a class="header" href="#获取节点的属性值"># 获取节点的属性值</a></h4>
+<p>如果我们得到了一个指向某块内存的<code>Rc</code>指针<code>ptr</code>，那么我们可以使用<code>borrow()</code>和<code>borrow_mut()</code>方法来获取它们指向内存的可变/不可变引用。比如我使用<code>let x = ptr.borrow()</code>，那么<code>x</code>此时就是对数据的不可变引用，可以进行不可变引用的一切操作。</p>
+<h4 id="修改指针的指向"><a class="header" href="#修改指针的指向"># 修改指针的指向</a></h4>
+<p>我们在修改一个<code>Rc</code>指针<code>ptr</code>的指向数据A的时候，事实上我们经历的过程是：</p>
+<ol>
+<li>制造一个指向目标数据A的<code>Rc</code>指针<code>ptr1</code>，或者获取一个已经指向该数据的<code>Rc</code>指针<code>ptr2</code>的所有权。数据A的计数引用加一。</li>
+<li>将<code>ptr1</code>或者<code>ptr2</code>的所有权移交给<code>ptr</code>。<code>ptr</code>指向数据的计数引用减一。</li>
+</ol>
+<p>通常我们用来制造一个指向已经存在某个引用<code>ptr</code>的数据的<code>Rc</code>指针的方法是使用：</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>pub struct LinkedListIterator&lt;T&gt; {
-    curr: Option&lt;Rc&lt;RefCell&lt;LinkedListNode&lt;T&gt;&gt;&gt;&gt;,
-}
-
-impl&lt;T&gt; LinkedListIterator&lt;T&gt; {
-    fn new(head: Option&lt;Rc&lt;RefCell&lt;LinkedListNode&lt;T&gt;&gt;&gt;&gt;) -&gt; Self {
-        LinkedListIterator { curr: head } // move ownership of head to curr
-    }
-}
-
-impl&lt;T: Clone&gt; Iterator for LinkedListIterator&lt;T&gt; {
-    type Item = T;
-
-    fn next(&amp;mut self) -&gt; Option&lt;Self::Item&gt; {
-        let curr = self.curr.clone();
-        if let Some(node) = curr {
-            let node_ref = node.borrow();
-            self.curr = node_ref.next.clone();
-            Some(node_ref.value.clone())
-        } else {
-            None
-        }
-    }
+</span>let new_ptr = ptr.clone();
+<span class="boring">}</span></code></pre></pre>
+<h4 id="linkedlistnodet的插入和删除"><a class="header" href="#linkedlistnodet的插入和删除"># <code>LinkedListNode&lt;T&gt;</code>的插入和删除</a></h4>
+<p>插入和删除是被封装在<code>LinkedListNode&lt;T&gt;</code>的方法里面的。这两个操作都是对于当前节点的下一个节点而进行的，而且对于删除，由于我们无法在<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mord">1</span><span class="mclose">)</span></span></span></span>的时间内找到前一个数据的位置，因此也只能操作后一个位置的数据。</p>
+<ul>
+<li><strong>插入</strong>：</li>
+</ul>
+<ol>
+<li>
+<p>创建一个<code>node(value)</code>，获取<code>self.next.clone()</code>，<strong>后一个数据的计数引用 == 2</strong>。</p>
+</li>
+<li>
+<p>创建一个关于<code>node</code>的<code>Rc&lt;RefCell&lt;T&gt;&gt;</code>并把所有权移交给<code>self.next</code>，此时 <strong><code>node</code>的计数引用 == 1</strong>；<strong>原来的后一个数据的计数引用 == 1</strong>。</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub fn insert(&amp;mut self, val: T) {
+    let node = LinkedListNode::new(val, self.next());
+    self.next = Some(Rc::new(RefCell::new(node)));
 }
 <span class="boring">}</span></code></pre></pre>
+</li>
+</ol>
+<ul>
+<li>
+<p><strong>删除</strong>：</p>
+<p>删除比插入多一点步骤，就是如果后面是<code>None</code>，那么就要扔出错误。假设要删除数据是A，那么其过程如下：</p>
+</li>
+</ul>
+<ol>
+<li>检查<code>self.next</code>是不是一个<code>None</code>，如果是直接报错。</li>
+<li>把<code>self.next</code>给<code>take()</code>出来并解包，放在另一个变量<code>ptr</code>里。这个<code>ptr</code>就是一个指向要删除数组的<code>Rc</code>指针。A的计数引用不变，但是<code>self.next</code>失去所有权，<code>ptr</code>获得所有权。</li>
+<li>把<code>ptr.borrow_mut().next.take()</code>移交给<code>self.next</code>。把A的next的所有权移交给<code>self.next</code>。</li>
+<li>克隆<code>ptr.borrow.value</code>，封装到<code>Ok()</code>里面返回。出作用域之后，由于<code>ptr</code>被释放，所指向的数据没有引用了，因而会被释放。</li>
+</ol>
+<h4 id="linkedlistt的遍历"><a class="header" href="#linkedlistt的遍历"># <code>LinkedList&lt;T&gt;</code>的遍历</a></h4>
+<p>对于用<code>Rc</code>指针实现的链表的遍历相对简单，因为我们不用考虑复杂的所有权转移问题，我们可以像在C语言中一样使用一个辅助指针来逐步移动。我们假设下一个节点不是<code>None</code>，则其移动一次只需要：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let wraped_ptr = self.head.clone();  // 辅助指针
+let x = wraped_ptr.as_ref().unwrap().borrow().next.clone();
+wraped_ptr = x;
+<span class="boring">}</span></code></pre></pre>
+<p>即可。至于这里为什么要使用中间变量<code>x</code>，那是因为如果将它们写到一行，由于我们借用了<code>wraped_ptr</code>，因而在解除借用之前（临时变量，作用域在本行之内），我们不允许修改wraped_ptr。另外也可以从生命周期的角度理解这个问题，详见：<a href="https://gist.github.com/HugoPhi/396b5428776b074908668c98e0dd1c76">Rust借用机制引发的一个小bug </a>.</p>
 <blockquote>
-<p><code>new()</code>函数中的注释说明我们移动了传入参数对数据的所有权，事实上你也可以传入引用，然后使用<code>Clone()</code>方法，但是这样做并不是一个明智的选择：</p>
-<ul>
-<li>首先，你需要类型<code>T</code>加入<code>Clone</code>特性约束。</li>
-<li>另外，这标明我们需要更多的开销。</li>
-</ul>
+<p>❌ Error: cannot assign to <code>wraped_ptr</code> because it is borrowed <code>wraped_ptr</code> is assigned to here but it was already borrowed.</p>
 </blockquote>
-<p>然后我们分别对两种不同的迭代器制造函数进行实现：</p>
-<h3 id="31-into_iter"><a class="header" href="#31-into_iter">3.1. <code>into_iter()</code></a></h3>
-<p>这里我们只需要实现<code>IntoIterator</code>的<code>into_iter()</code>方法，然后把所有权交给迭代器即可：</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>impl&lt;T: Clone&gt; IntoIterator for LinkedList&lt;T&gt; {
-    type Item = T;
-    type IntoIter = LinkedListIterator&lt;T&gt;;
-
-    fn into_iter(self) -&gt; Self::IntoIter {
-        LinkedListIterator::new(self.head) // do not use self.head.clone here is to avoid rc::ref + 1
-    }
-}
-<span class="boring">}</span></code></pre></pre>
-<p>这里的注释的意思是：不要使用<code>self.head.clone()</code>，这样会增加引用计数，带来不必要的开销，因为<code>self.head</code>此时已经不再被需要了。</p>
-<h3 id="32-no_move_iter"><a class="header" href="#32-no_move_iter">3.2. <code>no_move_iter()</code></a></h3>
-<p>我们在<code>impl&lt;T&gt; LinkedList&lt;T&gt;</code>的时候来做这个工作。它过于简单就不在这里详解了：</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>impl&lt;T&gt; LinkedList&lt;T&gt;
-    pub fn no_move_iter(&amp;self) -&gt; LinkedListIterator&lt;T&gt; {
-        LinkedListIterator::new(self.head.clone()) // use clone to avoid move of self.head if you use Box&lt;&gt; impled LinkedList this is not able to complemented
-    }
-}
-<span class="boring">}</span></code></pre></pre>
+<h2 id="3-如何实现迭代器"><a class="header" href="#3-如何实现迭代器">3. 如何实现迭代器</a></h2>
+<p>迭代器和迭代修饰器是Rust里一大利器。他让我们很方便地取代循环操作。在<code>Rc</code>中，我们只需要实现以下迭代器：</p>
+<ul>
+<li><code>into_iter()</code>，消耗所有权，逐步给出原链表里面的值，通过实现IntoIterator的Trait。</li>
+<li><code>no_move_iter()</code>，不消耗所有权，逐步给出原链表里面值的克隆，通过自定义函数iter实现。</li>
+</ul>
+<p>而不需要实现诸如借用迭代器，可变借用迭代器等等。因为<code>Rc</code>允许我们让一个数据有多个所有者。</p>
+<h2 id="4-可优化的空间"><a class="header" href="#4-可优化的空间">4. 可优化的空间</a></h2>
+<h3 id="41-查找ix2val"><a class="header" href="#41-查找ix2val">4.1. 查找(ix2val)</a></h3>
+<p>这里由于允许我们在一块数据建立多个指针引用，因此我们可以在中间放入一个指针<code>mid</code>，我们可以通过判断索引来确定到底时候要从<code>mid</code>开始查找，这样效率会提升近一倍。这个<code>mid</code>换算成索引就是：</p>
+<p><span class="katex-display"><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord text"><span class="mord">mid</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.0574em;vertical-align:-0.686em;"></span><span class="mopen">⌊</span><span class="mord"><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3714em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">2</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord text"><span class="mord">len</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span><span class="mclose">⌋</span></span></span></span></span></p>
+<p>但是这样也会带来维护的负担：</p>
+<ol>
+<li>插入：需要把<code>mid</code>向后移动<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord text"><span class="mord">mid</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mord mathnormal mtight">e</span><span class="mord mathnormal mtight" style="margin-right:0.02691em;">w</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord text"><span class="mord">mid</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">o</span><span class="mord mathnormal mtight" style="margin-right:0.01968em;">l</span><span class="mord mathnormal mtight">d</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>个。</li>
+<li>删除：需要从头找到新的<code>mid</code>的位置。</li>
+</ol>
+<p>总的来说，维护负担期望是：</p>
+<p><span class="katex-display"><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:4.401em;vertical-align:-1.9505em;"></span><span class="mtable"><span class="col-align-r"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:2.4505em;"><span style="top:-4.4505em;"><span class="pstrut" style="height:3.3214em;"></span><span class="mord"><span class="mord"><span class="mord mathbb">E</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord cjk_fallback mtight">维护</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span><span style="top:-2.3569em;"><span class="pstrut" style="height:3.3214em;"></span><span class="mord"></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.9505em;"><span></span></span></span></span></span><span class="col-align-l"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:2.4505em;"><span style="top:-4.4505em;"><span class="pstrut" style="height:3.3214em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord"><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">2</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mord"><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.1076em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">2</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">2</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mord">1</span><span class="mclose">)</span></span></span><span style="top:-2.3569em;"><span class="pstrut" style="height:3.3214em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mord"><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.1076em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">4</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span><span class="mclose">)</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.9505em;"><span></span></span></span></span></span></span></span><span class="tag"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:2.4505em;"><span style="top:-4.4505em;"><span class="pstrut" style="height:3.3214em;"></span><span class="eqn-num"></span></span><span style="top:-2.3569em;"><span class="pstrut" style="height:3.3214em;"></span><span class="eqn-num"></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.9505em;"><span></span></span></span></span></span></span></span></span></p>
 <div style="break-before: page; page-break-before: always;"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css">
 <h1 id="box-based-linked-list"><a class="header" href="#box-based-linked-list">Box Based Linked List</a></h1>
+<p>有了<a href="linear/./rc_linked_list.html">上一节</a>的铺垫，本节我们需要完成的事情相对而言就少得多。上一节中提到<code>Rc</code>链表虽然带来了<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mord">1</span><span class="mclose">)</span></span></span></span>级别的尾部插入操作，但是也让一些比较频繁的正常操作变得繁重与缓慢，其原因主要在于<code>Rc</code>的引用计数机制导致它产生了巨大的额外开销。为了避免这种开销，我们选择了另一种比较轻量智能指针<code>Box</code>指针来制作链表，其节点数据结构如下：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub struct LinkedListNode&lt;T&gt; {
+    value: T,
+    next: Option&lt;Box&lt;LinkedListNode&lt;T&gt;&gt;&gt;,
+}
+<span class="boring">}</span></code></pre></pre>
+<h2 id="2-如何建立linkedlist的数据结构-1"><a class="header" href="#2-如何建立linkedlist的数据结构-1">2. 如何建立LinkedList的数据结构</a></h2>
 
                     </main>
 

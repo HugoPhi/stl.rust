@@ -157,6 +157,15 @@
                     <main>
                         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css">
 <h1 id="box-based-linked-list"><a class="header" href="#box-based-linked-list">Box Based Linked List</a></h1>
+<p>有了<a href="./rc_linked_list.html">上一节</a>的铺垫，本节我们需要完成的事情相对而言就少得多。上一节中提到<code>Rc</code>链表虽然带来了<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mord">1</span><span class="mclose">)</span></span></span></span>级别的尾部插入操作，但是也让一些比较频繁的正常操作变得繁重与缓慢，其原因主要在于<code>Rc</code>的引用计数机制导致它产生了巨大的额外开销。为了避免这种开销，我们选择了另一种比较轻量智能指针<code>Box</code>指针来制作链表，其节点数据结构如下：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub struct LinkedListNode&lt;T&gt; {
+    value: T,
+    next: Option&lt;Box&lt;LinkedListNode&lt;T&gt;&gt;&gt;,
+}
+<span class="boring">}</span></code></pre></pre>
+<h2 id="2-如何建立linkedlist的数据结构"><a class="header" href="#2-如何建立linkedlist的数据结构">2. 如何建立LinkedList的数据结构</a></h2>
 
                     </main>
 
